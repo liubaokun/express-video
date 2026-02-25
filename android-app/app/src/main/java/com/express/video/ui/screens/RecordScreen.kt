@@ -1,5 +1,7 @@
 package com.express.video.ui.screens
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
@@ -76,6 +78,7 @@ enum class ParamPanel {
     NONE, WB, EV, ISO, AF
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordScreen(
     trackingNumber: String,
