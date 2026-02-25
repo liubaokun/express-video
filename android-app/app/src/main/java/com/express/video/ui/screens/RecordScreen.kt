@@ -445,6 +445,7 @@ private fun EVPanel(settings: CameraSettings, onChange: (CameraSettings) -> Unit
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ISOPanel(settings: CameraSettings, onChange: (CameraSettings) -> Unit) {
     val isoValues = listOf(100, 200, 400, 800, 1600, 3200)
