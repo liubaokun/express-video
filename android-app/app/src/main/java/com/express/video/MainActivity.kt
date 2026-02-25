@@ -61,7 +61,8 @@ class MainActivity : ComponentActivity() {
                                 onRecordingError = { viewModel.onRecordingError(it) },
                                 onPause = {},
                                 onResume = {},
-                                onStop = {}
+                                onStop = {},
+                                onCameraSettingsChange = { viewModel.updateCameraSettings(it) }
                             )
                         }
                         else -> {

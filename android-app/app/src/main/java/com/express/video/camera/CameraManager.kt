@@ -4,17 +4,17 @@ import android.content.Context
 import android.util.Log
 import android.util.Range
 import android.view.Surface
+import androidx.camera.camera2.interop.Camera2CameraControl
+import androidx.camera.camera2.interop.CaptureRequestOptions
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraControl
+import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory
-import androidx.camera.core.UseCase
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FileOutputOptions
-import androidx.camera.video.MediaStoreOutputOptions
-import androidx.camera.video.OutputOptions
 import androidx.camera.video.Quality
 import androidx.camera.video.QualitySelector
 import androidx.camera.video.Recorder
@@ -36,15 +36,13 @@ import java.util.concurrent.TimeUnit
 class CameraManager(
     private val context: Context,
     private val lifecycleOwner: LifecycleOwner,
-    private val previewView: PreviewView
+    val previewView: PreviewView
 ) {
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: Camera? = null
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
     private var _preview: Preview? = null
-    
-    val previewViewInstance: PreviewView get() = previewView
     
     private var currentRecordingFile: File? = null
 
@@ -54,8 +52,7 @@ class CameraManager(
     var onRecordingComplete: ((File?) -> Unit)? = null
     var onRecordingError: ((String) -> Unit)? = null
 
-    private val mainExecutor: ExecutorService = ContextCompat.getMainExecutor(context)
-        as ExecutorService
+    private val mainExecutor: ExecutorService = ContextCompat.getMainExecutor(context) as ExecutorService
 
     fun initialize(onReady: (() -> Unit)? = null) {
         val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
@@ -103,38 +100,111 @@ class CameraManager(
         }
     }
 
+    fun getZoomRange(): Range<Float> {
+        return camera?.cameraInfo?.zoomState?.value?.zoomRatioRange ?: Range(1.0f, 1.0f)
+    }
+
+    fun getCurrentZoom(): Float {
+        return camera?.cameraInfo?.zoomState?.value?.zoomRatio ?: 1.0f
+    }
+
+    fun setZoomRatio(ratio: Float) {
+        camera?.cameraControl?.setZoomRatio(ratio)
+    }
+
+    fun tapToFocus(x: Float, y: Float, viewWidth: Int, viewHeight: Int) {
+        val cam = camera ?: return
+        val factory = SurfaceOrientedMeteringPointFactory(viewWidth.toFloat(), viewHeight.toFloat())
+        val point = factory.createPoint(x, y)
+        val action = FocusMeteringAction.Builder(point)
+            .setAutoCancelDuration(2, TimeUnit.SECONDS)
+            .build()
+        cam.cameraControl.startFocusAndMetering(action)
+    }
+
     fun applySettings(settings: CameraSettings) {
         val cam = camera ?: return
         val cameraControl = cam.cameraControl
-        val cameraInfo = cam.cameraInfo
 
         try {
-            val exposureRange = cameraInfo.exposureState.exposureCompensationRange
+            val exposureRange = cam.cameraInfo.exposureState.exposureCompensationRange
             if (exposureRange.contains(settings.exposureCompensation)) {
                 cameraControl.setExposureCompensationIndex(settings.exposureCompensation)
             }
 
-            val meteringPointFactory = SurfaceOrientedMeteringPointFactory(
-                1f, 1f
-            )
-            val meteringPoint = meteringPointFactory.createPoint(0.5f, 0.5f)
-            val action = FocusMeteringAction.Builder(meteringPoint)
-                .setAutoCancelDuration(0, TimeUnit.SECONDS)
-                .build()
+            cameraControl.setZoomRatio(settings.zoomRatio)
+
+            val camera2Control = Camera2CameraControl.from(cameraControl)
+            val builder = CaptureRequestOptions.Builder()
+
+            when (settings.whiteBalanceMode) {
+                WhiteBalanceMode.AUTO -> {
+                    builder.setCaptureRequestOption(
+                        android.hardware.camera2.CaptureRequest.CONTROL_AWB_MODE,
+                        android.hardware.camera2.CameraMetadata.CONTROL_AWB_MODE_AUTO
+                    )
+                }
+                WhiteBalanceMode.MANUAL -> {
+                    builder.setCaptureRequestOption(
+                        android.hardware.camera2.CaptureRequest.CONTROL_AWB_MODE,
+                        android.hardware.camera2.CameraMetadata.CONTROL_AWB_MODE_OFF
+                    )
+                    val rggb = temperatureToRggb(settings.whiteBalanceTemperature)
+                    builder.setCaptureRequestOption(
+                        android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_GAINS,
+                        rggb
+                    )
+                }
+            }
 
             when (settings.focusMode) {
                 FocusMode.AUTO -> {
-                    cameraControl.startFocusAndMetering(action)
+                    builder.setCaptureRequestOption(
+                        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
+                        android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_AUTO
+                    )
                 }
                 FocusMode.CONTINUOUS -> {
+                    builder.setCaptureRequestOption(
+                        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
+                        android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO
+                    )
                 }
                 FocusMode.MANUAL -> {
-                    cameraControl.cancelFocusAndMetering()
+                    builder.setCaptureRequestOption(
+                        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
+                        android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_OFF
+                    )
                 }
             }
+
+            if (!settings.isIsoAuto) {
+                builder.setCaptureRequestOption(
+                    android.hardware.camera2.CaptureRequest.SENSOR_SENSITIVITY,
+                    settings.iso
+                )
+                builder.setCaptureRequestOption(
+                    android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE,
+                    android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF
+                )
+            } else {
+                builder.setCaptureRequestOption(
+                    android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE,
+                    android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_ON
+                )
+            }
+
+            camera2Control.setCaptureRequestOptions(builder.build())
         } catch (e: Exception) {
             Log.e("CameraManager", "Failed to apply camera settings", e)
         }
+    }
+
+    private fun temperatureToRggb(temperature: Int): android.hardware.camera2.params.RggbChannelVector {
+        val temp = temperature.coerceIn(2000, 8000)
+        val r = if (temp <= 4000) 1.0f else (temp - 4000f) / 2000f + 1f
+        val b = if (temp >= 5500) 1.0f else (5500f - temp) / 2000f + 1f
+        return android.hardware.camera2.params.RggbChannelVector(r, 1.0f, 1.0f, b)
     }
 
     fun startRecording(
@@ -172,12 +242,9 @@ class CameraManager(
                             }
                             recording = null
                         }
-                        is VideoRecordEvent.Status -> {
-                        }
-                        is VideoRecordEvent.Pause -> {
-                        }
-                        is VideoRecordEvent.Resume -> {
-                        }
+                        is VideoRecordEvent.Status -> {}
+                        is VideoRecordEvent.Pause -> {}
+                        is VideoRecordEvent.Resume -> {}
                     }
                 }
             return true

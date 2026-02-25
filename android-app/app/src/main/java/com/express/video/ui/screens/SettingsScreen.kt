@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -19,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -70,6 +73,7 @@ fun SettingsScreen(
     var iso by remember { mutableIntStateOf(config.cameraSettings.iso) }
 
     val exposureFloat = remember { mutableFloatStateOf(exposureCompensation.toFloat()) }
+    val isoValues = listOf(100, 200, 400, 800, 1600, 3200)
 
     Scaffold(
         topBar = {
@@ -97,7 +101,8 @@ fun SettingsScreen(
                                 whiteBalanceTemperature = whiteBalanceTemperature,
                                 focusMode = focusMode,
                                 iso = iso,
-                                isIsoAuto = isIsoAuto
+                                isIsoAuto = isIsoAuto,
+                                zoomRatio = config.cameraSettings.zoomRatio
                             ),
                             maxRecordDuration = maxRecordDuration
                         )
@@ -237,12 +242,28 @@ fun SettingsScreen(
                         text = "白平衡模式",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    selectGroup(
-                        options = WhiteBalanceMode.entries,
-                        selected = whiteBalanceMode,
-                        label = { it.label },
-                        onSelect = { whiteBalanceMode = it }
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = { whiteBalanceMode = WhiteBalanceMode.AUTO },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (whiteBalanceMode == WhiteBalanceMode.AUTO) 
+                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Text("自动")
+                        }
+                        Button(
+                            onClick = { whiteBalanceMode = WhiteBalanceMode.MANUAL },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (whiteBalanceMode == WhiteBalanceMode.MANUAL) 
+                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Text("手动")
+                        }
+                    }
 
                     if (whiteBalanceMode == WhiteBalanceMode.MANUAL) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -254,6 +275,7 @@ fun SettingsScreen(
                             value = whiteBalanceTemperature.toFloat(),
                             onValueChange = { whiteBalanceTemperature = it.toInt() },
                             valueRange = 2000f..8000f,
+                            steps = 59,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -277,27 +299,42 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "自动ISO",
+                            text = "ISO",
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Switch(
-                            checked = isIsoAuto,
-                            onCheckedChange = { isIsoAuto = it }
-                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { isIsoAuto = true },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (isIsoAuto) 
+                                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text("自动")
+                            }
+                            Button(
+                                onClick = { isIsoAuto = false },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (!isIsoAuto) 
+                                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                )
+                            ) {
+                                Text("手动")
+                            }
+                        }
                     }
 
                     if (!isIsoAuto) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "ISO: $iso",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Slider(
-                            value = iso.toFloat(),
-                            onValueChange = { iso = it.toInt() },
-                            valueRange = 100f..3200f,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            items(isoValues) { isoValue ->
+                                FilterChip(
+                                    selected = iso == isoValue,
+                                    onClick = { iso = isoValue },
+                                    label = { Text(isoValue.toString()) }
+                                )
+                            }
+                        }
                     }
                 }
             }

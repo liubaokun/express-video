@@ -3,7 +3,9 @@ package com.express.video.repository
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -31,7 +33,8 @@ class SettingsRepository(private val context: Context) {
         private val WHITE_BALANCE_TEMPERATURE = intPreferencesKey("white_balance_temperature")
         private val FOCUS_MODE = intPreferencesKey("focus_mode")
         private val ISO = intPreferencesKey("iso")
-        private val IS_ISO_AUTO = intPreferencesKey("is_iso_auto")
+        private val IS_ISO_AUTO = booleanPreferencesKey("is_iso_auto")
+        private val ZOOM_RATIO = floatPreferencesKey("zoom_ratio")
         private val MAX_RECORD_DURATION = intPreferencesKey("max_record_duration")
     }
 
@@ -46,13 +49,14 @@ class SettingsRepository(private val context: Context) {
             cameraSettings = CameraSettings(
                 exposureCompensation = prefs[EXPOSURE_COMPENSATION] ?: 0,
                 whiteBalanceMode = WhiteBalanceMode.entries.getOrNull(
-                    prefs[WHITE_BALANCE_MODE] ?: 1
+                    prefs[WHITE_BALANCE_MODE] ?: 0
                 ) ?: WhiteBalanceMode.AUTO,
                 whiteBalanceTemperature = prefs[WHITE_BALANCE_TEMPERATURE] ?: 5500,
-                focusMode = FocusMode.entries.getOrNull(prefs[FOCUS_MODE] ?: 1)
-                    ?: FocusMode.CONTINUOUS,
+                focusMode = FocusMode.entries.getOrNull(prefs[FOCUS_MODE] ?: 0)
+                    ?: FocusMode.AUTO,
                 iso = prefs[ISO] ?: 0,
-                isIsoAuto = (prefs[IS_ISO_AUTO] ?: 1) == 1
+                isIsoAuto = prefs[IS_ISO_AUTO] ?: true,
+                zoomRatio = prefs[ZOOM_RATIO] ?: 1.0f
             ),
             maxRecordDuration = prefs[MAX_RECORD_DURATION] ?: 0
         )
@@ -70,7 +74,8 @@ class SettingsRepository(private val context: Context) {
             prefs[WHITE_BALANCE_TEMPERATURE] = config.cameraSettings.whiteBalanceTemperature
             prefs[FOCUS_MODE] = config.cameraSettings.focusMode.ordinal
             prefs[ISO] = config.cameraSettings.iso
-            prefs[IS_ISO_AUTO] = if (config.cameraSettings.isIsoAuto) 1 else 0
+            prefs[IS_ISO_AUTO] = config.cameraSettings.isIsoAuto
+            prefs[ZOOM_RATIO] = config.cameraSettings.zoomRatio
             prefs[MAX_RECORD_DURATION] = config.maxRecordDuration
         }
     }
@@ -95,7 +100,8 @@ class SettingsRepository(private val context: Context) {
             prefs[WHITE_BALANCE_TEMPERATURE] = settings.whiteBalanceTemperature
             prefs[FOCUS_MODE] = settings.focusMode.ordinal
             prefs[ISO] = settings.iso
-            prefs[IS_ISO_AUTO] = if (settings.isIsoAuto) 1 else 0
+            prefs[IS_ISO_AUTO] = settings.isIsoAuto
+            prefs[ZOOM_RATIO] = settings.zoomRatio
         }
     }
 }

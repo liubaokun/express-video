@@ -25,22 +25,19 @@ data class CameraSettings(
     val exposureCompensation: Int = 0,
     val whiteBalanceMode: WhiteBalanceMode = WhiteBalanceMode.AUTO,
     val whiteBalanceTemperature: Int = 5500,
-    val focusMode: FocusMode = FocusMode.CONTINUOUS,
+    val focusMode: FocusMode = FocusMode.AUTO,
     val iso: Int = 0,
-    val isIsoAuto: Boolean = true
+    val isIsoAuto: Boolean = true,
+    val zoomRatio: Float = 1.0f
 )
 
 enum class WhiteBalanceMode(val value: Int, val label: String) {
     AUTO(1, "自动"),
-    INCANDESCENT(2, "白炽灯"),
-    FLUORESCENT(3, "荧光灯"),
-    DAYLIGHT(4, "日光"),
-    CLOUDY(5, "阴天"),
     MANUAL(0, "手动")
 }
 
 enum class FocusMode(val value: Int, val label: String) {
     AUTO(0, "自动"),
-    CONTINUOUS(1, "连续对焦"),
+    CONTINUOUS(1, "连续"),
     MANUAL(2, "手动")
 }
