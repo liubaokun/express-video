@@ -1,0 +1,293 @@
+ï»¿2026-02-25T10:32:29.5324428Z Current runner version: '2.331.0'
+2026-02-25T10:32:29.5356438Z ##[group]Runner Image Provisioner
+2026-02-25T10:32:29.5357738Z Hosted Compute Agent
+2026-02-25T10:32:29.5358908Z Version: 20260123.484
+2026-02-25T10:32:29.5359832Z Commit: 6bd6555ca37d84114959e1c76d2c01448ff61c5d
+2026-02-25T10:32:29.5361010Z Build Date: 2026-01-23T19:41:17Z
+2026-02-25T10:32:29.5362207Z Worker ID: {cfbd97cf-775f-42f1-b1ef-bfc7c36205f5}
+2026-02-25T10:32:29.5363354Z Azure Region: northcentralus
+2026-02-25T10:32:29.5364400Z ##[endgroup]
+2026-02-25T10:32:29.5366025Z ##[group]Operating System
+2026-02-25T10:32:29.5366683Z Ubuntu
+2026-02-25T10:32:29.5367144Z 24.04.3
+2026-02-25T10:32:29.5367625Z LTS
+2026-02-25T10:32:29.5368057Z ##[endgroup]
+2026-02-25T10:32:29.5368584Z ##[group]Runner Image
+2026-02-25T10:32:29.5369146Z Image: ubuntu-24.04
+2026-02-25T10:32:29.5369626Z Version: 20260201.15.1
+2026-02-25T10:32:29.5370780Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260201.15/images/ubuntu/Ubuntu2404-Readme.md
+2026-02-25T10:32:29.5372244Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260201.15
+2026-02-25T10:32:29.5373115Z ##[endgroup]
+2026-02-25T10:32:29.5374529Z ##[group]GITHUB_TOKEN Permissions
+2026-02-25T10:32:29.5376385Z Contents: read
+2026-02-25T10:32:29.5376918Z Metadata: read
+2026-02-25T10:32:29.5377489Z Packages: read
+2026-02-25T10:32:29.5377990Z ##[endgroup]
+2026-02-25T10:32:29.5380562Z Secret source: Actions
+2026-02-25T10:32:29.5381808Z Prepare workflow directory
+2026-02-25T10:32:29.5829031Z Prepare all required actions
+2026-02-25T10:32:29.5883346Z Getting action download info
+2026-02-25T10:32:30.0309293Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-02-25T10:32:30.1302234Z Download action repository 'actions/setup-java@v4' (SHA:c1e323688fd81a25caa38c78aa6df2d33d3e20d9)
+2026-02-25T10:32:30.5939456Z Download action repository 'gradle/actions@v3' (SHA:d9c87d481d55275bb5441eef3fe0e46805f9ef70)
+2026-02-25T10:32:31.3507362Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-02-25T10:32:31.4734725Z Download action repository 'softprops/action-gh-release@v1' (SHA:de2c0eb89ae2a093876385947365aca7b0e5f844)
+2026-02-25T10:32:31.9631120Z Complete job name: build
+2026-02-25T10:32:32.0449204Z ##[group]Run actions/checkout@v4
+2026-02-25T10:32:32.0450565Z with:
+2026-02-25T10:32:32.0451358Z   repository: liubaokun/express-video
+2026-02-25T10:32:32.0452599Z   token: ***
+2026-02-25T10:32:32.0453319Z   ssh-strict: true
+2026-02-25T10:32:32.0454289Z   ssh-user: git
+2026-02-25T10:32:32.0455073Z   persist-credentials: true
+2026-02-25T10:32:32.0455941Z   clean: true
+2026-02-25T10:32:32.0456711Z   sparse-checkout-cone-mode: true
+2026-02-25T10:32:32.0457661Z   fetch-depth: 1
+2026-02-25T10:32:32.0458404Z   fetch-tags: false
+2026-02-25T10:32:32.0459183Z   show-progress: true
+2026-02-25T10:32:32.0459950Z   lfs: false
+2026-02-25T10:32:32.0460652Z   submodules: false
+2026-02-25T10:32:32.0461426Z   set-safe-directory: true
+2026-02-25T10:32:32.0462571Z ##[endgroup]
+2026-02-25T10:32:32.1548895Z Syncing repository: liubaokun/express-video
+2026-02-25T10:32:32.1551421Z ##[group]Getting Git version info
+2026-02-25T10:32:32.1552890Z Working directory is '/home/runner/work/express-video/express-video'
+2026-02-25T10:32:32.1555133Z [command]/usr/bin/git version
+2026-02-25T10:32:32.1609868Z git version 2.52.0
+2026-02-25T10:32:32.1636913Z ##[endgroup]
+2026-02-25T10:32:32.1650920Z Temporarily overriding HOME='/home/runner/work/_temp/10c335dd-b6f1-40f9-b67d-437e6f839062' before making global git config changes
+2026-02-25T10:32:32.1654693Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-25T10:32:32.1662910Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/express-video/express-video
+2026-02-25T10:32:32.1700482Z Deleting the contents of '/home/runner/work/express-video/express-video'
+2026-02-25T10:32:32.1704287Z ##[group]Initializing the repository
+2026-02-25T10:32:32.1708577Z [command]/usr/bin/git init /home/runner/work/express-video/express-video
+2026-02-25T10:32:32.1813287Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-02-25T10:32:32.1816616Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-02-25T10:32:32.1819282Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-02-25T10:32:32.1820694Z hint: call:
+2026-02-25T10:32:32.1821380Z hint:
+2026-02-25T10:32:32.1822508Z hint: 	git config --global init.defaultBranch <name>
+2026-02-25T10:32:32.1824558Z hint:
+2026-02-25T10:32:32.1825620Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-02-25T10:32:32.1827564Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-02-25T10:32:32.1829401Z hint:
+2026-02-25T10:32:32.1830137Z hint: 	git branch -m <name>
+2026-02-25T10:32:32.1830966Z hint:
+2026-02-25T10:32:32.1832099Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-02-25T10:32:32.1834396Z Initialized empty Git repository in /home/runner/work/express-video/express-video/.git/
+2026-02-25T10:32:32.1837544Z [command]/usr/bin/git remote add origin https://github.com/liubaokun/express-video
+2026-02-25T10:32:32.1865329Z ##[endgroup]
+2026-02-25T10:32:32.1866796Z ##[group]Disabling automatic garbage collection
+2026-02-25T10:32:32.1868651Z [command]/usr/bin/git config --local gc.auto 0
+2026-02-25T10:32:32.1897583Z ##[endgroup]
+2026-02-25T10:32:32.1898822Z ##[group]Setting up auth
+2026-02-25T10:32:32.1906468Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-25T10:32:32.1939853Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-25T10:32:32.2307577Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-25T10:32:32.2342050Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-25T10:32:32.2559977Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-25T10:32:32.2591647Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-25T10:32:32.2827353Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-02-25T10:32:32.2863320Z ##[endgroup]
+2026-02-25T10:32:32.2865305Z ##[group]Fetching the repository
+2026-02-25T10:32:32.2873312Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8bedaffe42dae3c9c5e336428c5bc4fb413f55b6:refs/remotes/origin/main
+2026-02-25T10:32:32.5307064Z From https://github.com/liubaokun/express-video
+2026-02-25T10:32:32.5310964Z  * [new ref]         8bedaffe42dae3c9c5e336428c5bc4fb413f55b6 -> origin/main
+2026-02-25T10:32:32.5344232Z ##[endgroup]
+2026-02-25T10:32:32.5346749Z ##[group]Determining the checkout info
+2026-02-25T10:32:32.5349588Z ##[endgroup]
+2026-02-25T10:32:32.5351079Z [command]/usr/bin/git sparse-checkout disable
+2026-02-25T10:32:32.5394147Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-02-25T10:32:32.5422056Z ##[group]Checking out the ref
+2026-02-25T10:32:32.5424995Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-02-25T10:32:32.5508874Z Switched to a new branch 'main'
+2026-02-25T10:32:32.5511832Z branch 'main' set up to track 'origin/main'.
+2026-02-25T10:32:32.5520575Z ##[endgroup]
+2026-02-25T10:32:32.5556487Z [command]/usr/bin/git log -1 --format=%H
+2026-02-25T10:32:32.5579217Z 8bedaffe42dae3c9c5e336428c5bc4fb413f55b6
+2026-02-25T10:32:32.6057722Z ##[group]Run actions/setup-java@v4
+2026-02-25T10:32:32.6058709Z with:
+2026-02-25T10:32:32.6059608Z   java-version: 17
+2026-02-25T10:32:32.6060394Z   distribution: temurin
+2026-02-25T10:32:32.6061191Z   cache: gradle
+2026-02-25T10:32:32.6061932Z   java-package: jdk
+2026-02-25T10:32:32.6062689Z   check-latest: false
+2026-02-25T10:32:32.6063621Z   server-id: github
+2026-02-25T10:32:32.6064465Z   server-username: GITHUB_ACTOR
+2026-02-25T10:32:32.6065395Z   server-password: GITHUB_TOKEN
+2026-02-25T10:32:32.6066319Z   overwrite-settings: true
+2026-02-25T10:32:32.6067175Z   job-status: success
+2026-02-25T10:32:32.6068185Z   token: ***
+2026-02-25T10:32:32.6068899Z ##[endgroup]
+2026-02-25T10:32:32.8066540Z ##[group]Installed distributions
+2026-02-25T10:32:32.8283755Z Resolved Java 17.0.18+8 from tool-cache
+2026-02-25T10:32:32.8285431Z Setting Java 17.0.18+8 as the default
+2026-02-25T10:32:32.8298326Z Creating toolchains.xml for JDK version 17 from temurin
+2026-02-25T10:32:32.8376569Z Writing to /home/runner/.m2/toolchains.xml
+2026-02-25T10:32:32.8378057Z 
+2026-02-25T10:32:32.8378636Z Java configuration:
+2026-02-25T10:32:32.8380336Z   Distribution: temurin
+2026-02-25T10:32:32.8382104Z   Version: 17.0.18+8
+2026-02-25T10:32:32.8384858Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
+2026-02-25T10:32:32.8386944Z 
+2026-02-25T10:32:32.8398824Z ##[endgroup]
+2026-02-25T10:32:32.8418125Z Creating settings.xml with server-id: github
+2026-02-25T10:32:32.8419290Z Writing to /home/runner/.m2/settings.xml
+2026-02-25T10:32:33.0012997Z gradle cache is not found
+2026-02-25T10:32:33.0400054Z ##[group]Run gradle/actions/setup-gradle@v3
+2026-02-25T10:32:33.0401061Z with:
+2026-02-25T10:32:33.0401728Z   gradle-version: 8.5
+2026-02-25T10:32:33.0402512Z   cache-disabled: false
+2026-02-25T10:32:33.0403313Z   cache-read-only: false
+2026-02-25T10:32:33.0404288Z   cache-write-only: false
+2026-02-25T10:32:33.0405144Z   cache-overwrite-existing: false
+2026-02-25T10:32:33.0406200Z   gradle-home-cache-includes: caches
+notifications
+
+2026-02-25T10:32:33.0407333Z   gradle-home-cache-cleanup: false
+2026-02-25T10:32:33.0408273Z   add-job-summary: always
+2026-02-25T10:32:33.0409140Z   add-job-summary-as-pr-comment: never
+2026-02-25T10:32:33.0410119Z   dependency-graph: disabled
+2026-02-25T10:32:33.0411076Z   dependency-graph-continue-on-failure: true
+2026-02-25T10:32:33.0412120Z   build-scan-publish: false
+2026-02-25T10:32:33.0412977Z   validate-wrappers: false
+2026-02-25T10:32:33.0413979Z   generate-job-summary: true
+2026-02-25T10:32:33.0414892Z   gradle-home-cache-strict-match: false
+2026-02-25T10:32:33.0415906Z   workflow-job-context: null
+2026-02-25T10:32:33.0417108Z   github-token: ***
+2026-02-25T10:32:33.0417834Z env:
+2026-02-25T10:32:33.0418833Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
+2026-02-25T10:32:33.0420500Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
+2026-02-25T10:32:33.0421820Z ##[endgroup]
+2026-02-25T10:32:33.4251655Z Merged default JDK locations into /home/runner/.m2/toolchains.xml
+2026-02-25T10:32:33.4254548Z ##[group]Restore Gradle state from cache
+2026-02-25T10:32:33.4963357Z ##[warning]Failed to restore gradle-home-v1|Linux|build[620c74083efa5b88ef904c2356f72d31]-8bedaffe42dae3c9c5e336428c5bc4fb413f55b6: Error: Cache service responded with 400
+2026-02-25T10:32:33.5012538Z Gradle User Home cache not found. Will initialize empty.
+2026-02-25T10:32:33.5014372Z ##[endgroup]
+2026-02-25T10:32:33.5511905Z ##[group]Provision Gradle 8.5
+2026-02-25T10:32:33.5844810Z ##[warning]Restore Gradle distribution 8.5 failed: Error: Cache service responded with 400
+2026-02-25T10:32:33.5849719Z Gradle distribution 8.5 not found in cache. Will download.
+2026-02-25T10:32:34.4390085Z Downloaded https://services.gradle.org/distributions/gradle-8.5-bin.zip to /home/runner/gradle-installations/downloads/gradle-8.5-bin.zip (size 132519731)
+2026-02-25T10:32:34.4532300Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/express-video/express-video --files-from manifest.txt --use-compress-program zstdmt
+2026-02-25T10:32:34.6919716Z ##[warning]Save Gradle distribution 8.5 failed: Error: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0ws+eaQAAAAAGlNIvsNuMR4LhXrjyv1DvQ0hJMzBFREdFMDMxOQBFZGdl
+2026-02-25T10:32:34.6938797Z [command]/usr/bin/unzip -o -q /home/runner/gradle-installations/downloads/gradle-8.5-bin.zip
+2026-02-25T10:32:35.6760792Z Extracted Gradle 8.5 to /home/runner/gradle-installations/installs/gradle-8.5
+2026-02-25T10:32:35.6761984Z Provisioned Gradle executable /home/runner/gradle-installations/installs/gradle-8.5/bin/gradle
+2026-02-25T10:32:35.6764083Z ##[endgroup]
+2026-02-25T10:32:35.6907639Z ##[group]Run cd android-app
+2026-02-25T10:32:35.6907973Z [36;1mcd android-app[0m
+2026-02-25T10:32:35.6908233Z [36;1mgradle assembleDebug --no-daemon[0m
+2026-02-25T10:32:35.6942969Z shell: /usr/bin/bash -e {0}
+2026-02-25T10:32:35.6943219Z env:
+2026-02-25T10:32:35.6943812Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
+2026-02-25T10:32:35.6944318Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.18-8/x64
+2026-02-25T10:32:35.6944727Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-02-25T10:32:35.6945022Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-02-25T10:32:35.6945310Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-02-25T10:32:35.6945738Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-02-25T10:32:35.6946214Z   DEVELOCITY_AUTO_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-02-25T10:32:35.6946532Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-02-25T10:32:35.6946782Z ##[endgroup]
+2026-02-25T10:32:36.2907535Z 
+2026-02-25T10:32:36.2908867Z Welcome to Gradle 8.5!
+2026-02-25T10:32:36.2909222Z 
+2026-02-25T10:32:36.2911627Z Here are the highlights of this release:
+2026-02-25T10:32:36.2912733Z  - Support for running on Java 21
+2026-02-25T10:32:36.2914625Z  - Faster first use with Kotlin DSL
+2026-02-25T10:32:36.2915752Z  - Improved error and warning messages
+2026-02-25T10:32:36.2916528Z 
+2026-02-25T10:32:36.2918833Z For more details see https://docs.gradle.org/8.5/release-notes.html
+2026-02-25T10:32:36.2920752Z 
+2026-02-25T10:32:36.4907284Z To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.5/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+2026-02-25T10:32:37.6895632Z Daemon will be stopped at the end of the build 
+2026-02-25T10:34:20.8928488Z > Task :app:preBuild UP-TO-DATE
+2026-02-25T10:34:20.8930532Z > Task :app:preDebugBuild UP-TO-DATE
+2026-02-25T10:34:20.8935911Z > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+2026-02-25T10:34:20.8948748Z > Task :app:checkKotlinGradlePluginConfigurationErrors
+2026-02-25T10:34:20.8951635Z > Task :app:generateDebugBuildConfig
+2026-02-25T10:34:50.8894201Z > Task :app:checkDebugAarMetadata
+2026-02-25T10:35:47.9937774Z > Task :app:generateDebugResValues
+2026-02-25T10:35:48.1934240Z > Task :app:mapDebugSourceSetPaths
+2026-02-25T10:35:48.1934820Z > Task :app:generateDebugResources
+2026-02-25T10:35:49.4892401Z > Task :app:packageDebugResources
+2026-02-25T10:35:50.2892572Z > Task :app:mergeDebugResources
+2026-02-25T10:35:52.6945294Z > Task :app:createDebugCompatibleScreenManifests
+2026-02-25T10:35:52.6964518Z > Task :app:extractDeepLinksDebug
+2026-02-25T10:35:52.8892609Z > Task :app:parseDebugLocalResources
+2026-02-25T10:35:53.0893768Z > Task :app:processDebugMainManifest
+2026-02-25T10:35:53.1900989Z > Task :app:processDebugManifest
+2026-02-25T10:35:53.2900641Z > Task :app:javaPreCompileDebug
+2026-02-25T10:35:53.2924308Z > Task :app:mergeDebugShaders
+2026-02-25T10:35:53.2924790Z > Task :app:compileDebugShaders NO-SOURCE
+2026-02-25T10:35:53.2925527Z > Task :app:generateDebugAssets UP-TO-DATE
+2026-02-25T10:35:53.3901629Z > Task :app:mergeDebugAssets
+2026-02-25T10:35:53.4892046Z > Task :app:processDebugManifestForPackage
+2026-02-25T10:35:53.4892603Z > Task :app:compressDebugAssets
+2026-02-25T10:35:55.4939393Z > Task :app:desugarDebugFileDependencies
+2026-02-25T10:35:55.8892615Z > Task :app:processDebugResources FAILED
+2026-02-25T10:35:57.5894005Z > Task :app:checkDebugDuplicateClasses
+2026-02-25T10:35:57.6905051Z 
+2026-02-25T10:35:57.6905915Z FAILURE: Build failed with an exception.
+2026-02-25T10:35:57.6906841Z 
+2026-02-25T10:35:57.6907211Z * What went wrong:
+2026-02-25T10:35:57.6907896Z Execution failed for task ':app:processDebugResources'.
+2026-02-25T10:35:57.6912957Z > A failure occurred while executing com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask$TaskAction
+2026-02-25T10:35:57.6944730Z    > Android resource linking failed
+2026-02-25T10:35:57.6946068Z 20 actionable tasks: 20 executed
+2026-02-25T10:35:57.6948532Z      ERROR: /home/runner/work/express-video/express-video/android-app/app/src/main/AndroidManifest.xml:14:5-36:19: AAPT: error: resource mipmap/ic_launcher (aka com.express.video:mipmap/ic_launcher) not found.
+2026-02-25T10:35:57.6949969Z          
+2026-02-25T10:35:57.6951376Z      ERROR: /home/runner/work/express-video/express-video/android-app/app/src/main/AndroidManifest.xml:14:5-36:19: AAPT: error: resource mipmap/ic_launcher_round (aka com.express.video:mipmap/ic_launcher_round) not found.
+2026-02-25T10:35:57.6952925Z          
+2026-02-25T10:35:57.6953109Z 
+2026-02-25T10:35:57.6953223Z * Try:
+2026-02-25T10:35:57.6953811Z > Run with --stacktrace option to get the stack trace.
+2026-02-25T10:35:57.6954395Z > Run with --info or --debug option to get more log output.
+2026-02-25T10:35:57.6954943Z > Run with --scan to get full insights.
+2026-02-25T10:35:57.6955449Z > Get more help at https://help.gradle.org.
+2026-02-25T10:35:57.6955791Z 
+2026-02-25T10:35:57.6955925Z BUILD FAILED in 3m 21s
+2026-02-25T10:35:58.1450308Z ##[error]Process completed with exit code 1.
+2026-02-25T10:35:58.1642896Z Post job cleanup.
+2026-02-25T10:35:58.4181878Z In post-action step
+2026-02-25T10:35:58.4190637Z Stopping all Gradle daemons before saving Gradle User Home state
+2026-02-25T10:35:58.4191905Z Stopping Gradle daemons for /home/runner/gradle-installations/installs/gradle-8.5
+2026-02-25T10:35:58.4210990Z [command]/home/runner/gradle-installations/installs/gradle-8.5/bin/gradle --stop
+2026-02-25T10:35:59.2836628Z No Gradle daemons are running.
+2026-02-25T10:35:59.3047873Z ##[group]Caching Gradle state
+2026-02-25T10:35:59.3412335Z Caching generated-gradle-jars with path '/home/runner/.gradle/caches/8.5/generated-gradle-jars/gradle-api-8.5.jar' and cache key: gradle-generated-gradle-jars-v1-fa001ab82c3596b4e27ec78f191b889f
+2026-02-25T10:35:59.3612590Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/express-video/express-video --files-from manifest.txt --use-compress-program zstdmt
+2026-02-25T10:35:59.7253369Z Caching dependencies with path '/home/runner/.gradle/caches/modules-*/files-*/*/*/*/*' and cache key: gradle-dependencies-v1-ff88764c2f01ad445c4ce00043010148
+2026-02-25T10:35:59.8221130Z Caching instrumented-jars with path '/home/runner/.gradle/caches/jars-*/*/' and cache key: gradle-instrumented-jars-v1-967dd89fcf7ee4329ea78b7afe0c6cab
+2026-02-25T10:35:59.8501606Z Caching kotlin-dsl with path '/home/runner/.gradle/caches/*/kotlin-dsl/accessors/*/
+2026-02-25T10:35:59.8503238Z /home/runner/.gradle/caches/*/kotlin-dsl/scripts/*/' and cache key: gradle-kotlin-dsl-v1-61030a26832bdbb1176cfba493072397
+2026-02-25T10:35:59.9511245Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/express-video/express-video --files-from manifest.txt --use-compress-program zstdmt
+2026-02-25T10:35:59.9593277Z ##[warning]Failed to save cache entry with path '/home/runner/.gradle/caches/8.5/generated-gradle-jars/gradle-api-8.5.jar' and key: gradle-generated-gradle-jars-v1-fa001ab82c3596b4e27ec78f191b889f: Error: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0j9CeaQAAAAC04AW9TUzuSZExyywDDzeEQ0hJMzBFREdFMDQwOABFZGdl
+2026-02-25T10:36:00.0317925Z ##[warning]Failed to save cache entry with path '/home/runner/.gradle/caches/*/kotlin-dsl/accessors/*/
+/home/runner/.gradle/caches/*/kotlin-dsl/scripts/*/' and key: gradle-kotlin-dsl-v1-61030a26832bdbb1176cfba493072397: Error: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0kNCeaQAAAACx+avqMU2FQqYd64n8VLkcQ0hHRURHRTE5MTgARWRnZQ==
+2026-02-25T10:36:00.0901955Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/express-video/express-video --files-from manifest.txt --use-compress-program zstdmt
+2026-02-25T10:36:00.3574240Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/express-video/express-video --files-from manifest.txt --use-compress-program zstdmt
+2026-02-25T10:36:01.4677243Z ##[warning]Failed to save cache entry with path '/home/runner/.gradle/caches/modules-*/files-*/*/*/*/*' and key: gradle-dependencies-v1-ff88764c2f01ad445c4ce00043010148: Error: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0kdCeaQAAAADxSVudDI07Rpz1hK7vu6moQ0hHRURHRTE3MDcARWRnZQ==
+2026-02-25T10:36:01.6634869Z ##[warning]Failed to save cache entry with path '/home/runner/.gradle/caches/jars-*/*/' and key: gradle-instrumented-jars-v1-967dd89fcf7ee4329ea78b7afe0c6cab: Error: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0kdCeaQAAAACzBuSnTDIKT5LH17LudlYRQ0hHRURHRTE3MTEARWRnZQ==
+2026-02-25T10:36:01.7632802Z Caching Gradle User Home with cache key: gradle-home-v1|Linux|build[620c74083efa5b88ef904c2356f72d31]-8bedaffe42dae3c9c5e336428c5bc4fb413f55b6
+2026-02-25T10:36:01.7731305Z [command]/usr/bin/tar --posix -cf cache.tzst --exclude cache.tzst -P -C /home/runner/work/express-video/express-video --files-from manifest.txt --use-compress-program zstdmt
+2026-02-25T10:36:02.5394848Z ##[warning]Failed to save cache entry with path '/home/runner/.gradle/caches,/home/runner/.gradle/notifications,/home/runner/.gradle/.setup-gradle' and key: gradle-home-v1|Linux|build[620c74083efa5b88ef904c2356f72d31]-8bedaffe42dae3c9c5e336428c5bc4fb413f55b6: Error: <h2>Our services aren't available right now</h2><p>We're working to restore all services as soon as possible. Please check back soon.</p>0ktCeaQAAAAAanEvRSOPlQbisA/pBbjzwQ0hHRURHRTE4MjAARWRnZQ==
+2026-02-25T10:36:02.5397773Z ##[endgroup]
+2026-02-25T10:36:02.5402357Z Generating Job Summary
+2026-02-25T10:36:02.5419582Z Completed post-action step
+2026-02-25T10:36:02.5602429Z Post job cleanup.
+2026-02-25T10:36:02.7458548Z Post job cleanup.
+2026-02-25T10:36:02.8476071Z [command]/usr/bin/git version
+2026-02-25T10:36:02.8516756Z git version 2.52.0
+2026-02-25T10:36:02.8565466Z Temporarily overriding HOME='/home/runner/work/_temp/d80c63c7-929d-43f7-a4b6-196826c1db3b' before making global git config changes
+2026-02-25T10:36:02.8566795Z Adding repository directory to the temporary git global config as a safe directory
+2026-02-25T10:36:02.8573139Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/express-video/express-video
+2026-02-25T10:36:02.8617804Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-02-25T10:36:02.8661600Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-02-25T10:36:02.8922035Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-02-25T10:36:02.8949221Z http.https://github.com/.extraheader
+2026-02-25T10:36:02.8969635Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-02-25T10:36:02.9009923Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-02-25T10:36:02.9255234Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-02-25T10:36:02.9292786Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-02-25T10:36:02.9658161Z Cleaning up orphan processes
+
