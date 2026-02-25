@@ -101,7 +101,7 @@ class CameraManager(
     }
 
     fun getZoomRange(): Range<Float> {
-        return camera?.cameraInfo?.zoomState?.value?.zoomRatioRange ?: Range(1.0f, 1.0f)
+        return camera?.cameraInfo?.zoomState?.value?.zoomRatio?.let { Range(1.0f, it) } ?: Range(1.0f, 10.0f)
     }
 
     fun getCurrentZoom(): Float {

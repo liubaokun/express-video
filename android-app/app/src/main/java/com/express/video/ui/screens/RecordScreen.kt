@@ -216,7 +216,7 @@ fun RecordScreen(
         focusBoxPosition?.let { pos ->
             Box(
                 modifier = Modifier
-                    .offset(pos.x.dp - 40.dp, pos.y.dp - 40.dp)
+                    .offset(x = (pos.x - 40).dp, y = (pos.y - 40).dp)
                     .size(80.dp)
                     .border(2.dp, Color.Yellow, RoundedCornerShape(8.dp))
                     .alpha(animatedFocusAlpha)

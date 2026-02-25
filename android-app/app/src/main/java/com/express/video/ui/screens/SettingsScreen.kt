@@ -245,21 +245,13 @@ fun SettingsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = { whiteBalanceMode = WhiteBalanceMode.AUTO },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (whiteBalanceMode == WhiteBalanceMode.AUTO) 
-                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                            )
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("自动")
                         }
                         Button(
                             onClick = { whiteBalanceMode = WhiteBalanceMode.MANUAL },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (whiteBalanceMode == WhiteBalanceMode.MANUAL) 
-                                    MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                            )
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("手动")
                         }
@@ -303,22 +295,10 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = { isIsoAuto = true },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isIsoAuto) 
-                                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            ) {
+                            Button(onClick = { isIsoAuto = true }) {
                                 Text("自动")
                             }
-                            Button(
-                                onClick = { isIsoAuto = false },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (!isIsoAuto) 
-                                        MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            ) {
+                            Button(onClick = { isIsoAuto = false }) {
                                 Text("手动")
                             }
                         }
