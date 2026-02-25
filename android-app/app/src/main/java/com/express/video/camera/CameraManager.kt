@@ -43,7 +43,8 @@ class CameraManager(
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
     private var _preview: Preview? = null
-    val preview: Preview? get() = _preview
+    
+    val previewViewInstance: PreviewView get() = previewView
     
     private var currentRecordingFile: File? = null
 

@@ -52,7 +52,7 @@ class SettingsRepository(private val context: Context) {
                 focusMode = FocusMode.entries.getOrNull(prefs[FOCUS_MODE] ?: 1)
                     ?: FocusMode.CONTINUOUS,
                 iso = prefs[ISO] ?: 0,
-                isIsoAuto = prefs[IS_ISO_AUTO] ?: true
+                isIsoAuto = (prefs[IS_ISO_AUTO] ?: 1) == 1
             ),
             maxRecordDuration = prefs[MAX_RECORD_DURATION] ?: 0
         )

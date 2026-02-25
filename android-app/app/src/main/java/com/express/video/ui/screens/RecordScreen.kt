@@ -91,7 +91,7 @@ fun RecordScreen(
             )
             manager.initialize {
                 manager.applySettings(cameraSettings)
-                previewView = manager.preview
+                previewView = manager.previewViewInstance
                 val started = manager.startRecording(
                     trackingNumber = trackingNumber,
                     videoRepository = VideoRepository(context),
@@ -175,7 +175,7 @@ fun RecordScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(
-                        progress = { uploadProgress / 100f },
+                        progress = uploadProgress / 100f,
                         modifier = Modifier.size(64.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
