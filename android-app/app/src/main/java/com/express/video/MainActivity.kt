@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                                 uploadProgress = uiState.uploadProgress,
                                 uploadStatus = uiState.uploadStatus,
                                 onRecordingComplete = {
-                                    viewModel.onRecordingComplete(it)
+                                    viewModel.onRecordingComplete(null)
                                 },
                                 onRecordingError = { viewModel.onRecordingError(it) },
                                 onPause = {},

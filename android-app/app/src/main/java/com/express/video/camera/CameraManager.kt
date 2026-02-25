@@ -42,7 +42,9 @@ class CameraManager(
     private var camera: Camera? = null
     private var videoCapture: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
-    private var preview: Preview? = null
+    private var _preview: Preview? = null
+    val preview: Preview? get() = _preview
+    
     private var currentRecordingFile: File? = null
 
     var isRecording: Boolean = false
@@ -74,10 +76,10 @@ class CameraManager(
         val provider = cameraProvider ?: return
         provider.unbindAll()
 
-        preview = Preview.Builder()
+        _preview = Preview.Builder()
             .build()
-            .also {
-                it.surfaceProvider = previewView.surfaceProvider
+            .also { preview ->
+                preview.setSurfaceProvider(previewView.surfaceProvider)
             }
 
         val recorder = Recorder.Builder()
@@ -92,7 +94,7 @@ class CameraManager(
             camera = provider.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
-                preview,
+                _preview,
                 videoCapture
             )
         } catch (e: Exception) {
@@ -205,6 +207,6 @@ class CameraManager(
         cameraProvider = null
         camera = null
         videoCapture = null
-        preview = null
+        _preview = null
     }
 }

@@ -140,7 +140,7 @@ fun ScanScreen(
                         val preview = Preview.Builder()
                             .build()
                             .also {
-                                it.surfaceProvider = view.surfaceProvider
+                                it.setSurfaceProvider(view.surfaceProvider)
                             }
 
                         val imageAnalysis = ImageAnalysis.Builder()
