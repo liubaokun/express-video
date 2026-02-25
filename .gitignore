@@ -1,0 +1,28 @@
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+
+# Android
+android-app/.gradle/
+android-app/app/build/
+android-app/build/
+*.apk
+*.ap_
+*.dex
+*.class
+local.properties
+
+# Log
+*.log
