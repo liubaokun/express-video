@@ -5,7 +5,6 @@ import android.hardware.camera2.CaptureRequest
 import android.util.Log
 import android.util.Range
 import androidx.camera.camera2.interop.Camera2CameraControl
-import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -25,9 +24,6 @@ import com.express.video.model.WhiteBalanceMode
 import com.google.common.util.concurrent.ListenableFuture
 import java.io.File
 import java.util.concurrent.Executor
-import kotlin.math.log10
-import kotlin.math.pow
-import kotlin.math.abs
 
 class CameraManager(
     private val context: Context,
@@ -43,7 +39,6 @@ class CameraManager(
     
     private var currentRecordingFile: File? = null
     private var isInitialized = false
-    private var supportsManualColorCorrection: Boolean = false
 
     var isRecording: Boolean = false
         private set
@@ -120,26 +115,10 @@ class CameraManager(
             Log.d("CameraManager", "Camera bound to lifecycle successfully")
             
             setupContinuousFocus()
-            checkManualColorCorrectionSupport()
             
         } catch (e: Exception) {
             Log.e("CameraManager", "Failed to bind camera use cases", e)
             onRecordingError?.invoke("Failed to bind camera: ${e.message}")
-        }
-    }
-
-    private fun checkManualColorCorrectionSupport() {
-        val cam = camera ?: return
-        try {
-            val camera2Info = Camera2CameraInfo.from(cam.cameraInfo)
-            val characteristics = camera2Info.getCameraCharacteristic(
-                android.hardware.camera2.CameraCharacteristics.COLOR_CORRECTION_AVAILABLE_ABBS
-            )
-            supportsManualColorCorrection = characteristics != null && characteristics.isNotEmpty()
-            Log.d("CameraManager", "Manual color correction supported: $supportsManualColorCorrection")
-        } catch (e: Exception) {
-            supportsManualColorCorrection = false
-            Log.w("CameraManager", "Failed to check color correction support", e)
         }
     }
 
@@ -180,79 +159,9 @@ class CameraManager(
     }
 
     fun setColorTemperature(colorTemp: Int) {
-        val control = camera2Control ?: return
-        
-        if (supportsManualColorCorrection && colorTemp != 0) {
-            try {
-                val gains = colorTemperatureToRgbGains(colorTemp)
-                control.setCaptureRequestOptions(
-                    androidx.camera.camera2.interop.CaptureRequestOptions.Builder()
-                        .setCaptureRequestOption(
-                            CaptureRequest.CONTROL_AWB_MODE,
-                            CaptureRequest.CONTROL_AWB_MODE_OFF
-                        )
-                        .setCaptureRequestOption(
-                            CaptureRequest.COLOR_CORRECTION_MODE,
-                            CaptureRequest.COLOR_CORRECTION_MODE_TRANSFORM_MATRIX
-                        )
-                        .setCaptureRequestOption(
-                            CaptureRequest.COLOR_CORRECTION_GAINS,
-                            floatArrayOf(gains[0], gains[1], gains[2], 1.0f)
-                        )
-                        .build()
-                )
-                Log.d("CameraManager", "Manual color temp set: ${colorTemp}K, gains: R=${gains[0]}, G=${gains[1]}, B=${gains[2]}")
-            } catch (e: Exception) {
-                Log.w("CameraManager", "Failed to set manual color temp, falling back to preset", e)
-                setColorTemperaturePreset(colorTemp)
-            }
-        } else {
-            setColorTemperaturePreset(colorTemp)
-        }
-    }
-
-    private fun setColorTemperaturePreset(colorTemp: Int) {
         val mode = WhiteBalanceMode.fromColorTemp(colorTemp)
         setWhiteBalance(mode.mode)
         Log.d("CameraManager", "Color temp $colorTemp K -> preset ${mode.label}")
-    }
-
-    private fun colorTemperatureToRgbGains(colorTemp: Int): FloatArray {
-        val temp = colorTemp.toDouble() / 100.0
-        var red: Double
-        var green: Double
-        var blue: Double
-
-        red = if (temp <= 66) {
-            255.0
-        } else {
-            val r = temp - 60
-            329.698727446 * r.pow(-0.1332047592)
-        }
-
-        green = if (temp <= 66) {
-            99.4708025861 * log10(temp) - 161.1195681661
-        } else {
-            288.1221695283 * (temp - 60).pow(-0.0755148492)
-        }
-
-        blue = when {
-            temp >= 66 -> 255.0
-            temp <= 19 -> 0.0
-            else -> 138.5177312231 * log10(temp - 10) - 305.0447927307
-        }
-
-        val rGain = (red.coerceAtLeast(0.0).coerceAtMost(255.0) / 255.0).toFloat()
-        val gGain = (green.coerceAtLeast(0.0).coerceAtMost(255.0) / 255.0).toFloat()
-        val bGain = (blue.coerceAtLeast(0.0).coerceAtMost(255.0) / 255.0).toFloat()
-
-        val maxGain = maxOf(rGain, gGain, bGain, 1.0f)
-        
-        return floatArrayOf(
-            (rGain / maxGain),
-            (gGain / maxGain),
-            (bGain / maxGain)
-        )
     }
 
     fun getZoomRange(): Range<Float> {
