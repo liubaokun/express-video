@@ -2,6 +2,7 @@ package com.express.video.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,6 +83,7 @@ fun ScanScreen(
 
     var cameraProvider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
     var isCameraReady by remember { mutableStateOf(false) }
+    var isCameraBound by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -103,17 +105,36 @@ fun ScanScreen(
 
     LaunchedEffect(hasCameraPermission) {
         if (hasCameraPermission) {
-            val providerFuture = ProcessCameraProvider.getInstance(context)
-            providerFuture.addListener({
-                cameraProvider = providerFuture.get()
-                isCameraReady = true
-            }, ContextCompat.getMainExecutor(context))
+            try {
+                val providerFuture = ProcessCameraProvider.getInstance(context)
+                providerFuture.addListener({
+                    try {
+                        cameraProvider = providerFuture.get()
+                        isCameraReady = true
+                    } catch (e: Exception) {
+                        Log.e("ScanScreen", "Failed to get camera provider", e)
+                    }
+                }, ContextCompat.getMainExecutor(context))
+            } catch (e: Exception) {
+                Log.e("ScanScreen", "Failed to initialize camera", e)
+            }
         }
     }
 
     DisposableEffect(cameraProvider) {
         onDispose {
             cameraProvider?.unbindAll()
+            isCameraBound = false
+        }
+    }
+
+    val previewView = remember {
+        PreviewView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            scaleType = PreviewView.ScaleType.FILL_CENTER
         }
     }
 
@@ -123,57 +144,56 @@ fun ScanScreen(
         if (hasCameraPermission && isCameraReady && cameraProvider != null) {
             AndroidView(
                 factory = { ctx ->
-                    PreviewView(ctx).apply {
-                        layoutParams = ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
-                        scaleType = PreviewView.ScaleType.FILL_CENTER
+                    previewView.apply {
+                        post {
+                            try {
+                                val provider = cameraProvider ?: return@post
+                                if (isCameraBound) return@post
+                                
+                                provider.unbindAll()
+                                
+                                val preview = Preview.Builder()
+                                    .build()
+                                    .also {
+                                        it.setSurfaceProvider(surfaceProvider)
+                                    }
+
+                                val imageAnalysis = ImageAnalysis.Builder()
+                                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                                    .build()
+                                    .also {
+                                        it.setAnalyzer(
+                                            ContextCompat.getMainExecutor(context),
+                                            BarcodeAnalyzer { barcode ->
+                                                onBarcodeDetected(barcode)
+                                            }
+                                        )
+                                    }
+
+                                val cameraSelector = androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
+
+                                val camera = provider.bindToLifecycle(
+                                    lifecycleOwner,
+                                    cameraSelector,
+                                    preview,
+                                    imageAnalysis
+                                )
+
+                                val exposureRange = camera.cameraInfo.exposureState.exposureCompensationRange
+                                if (exposureRange.contains(cameraSettings.exposureCompensation)) {
+                                    camera.cameraControl.setExposureCompensationIndex(
+                                        cameraSettings.exposureCompensation
+                                    )
+                                }
+                                
+                                isCameraBound = true
+                            } catch (e: Exception) {
+                                Log.e("ScanScreen", "Failed to bind camera", e)
+                            }
+                        }
                     }
                 },
-                modifier = Modifier.fillMaxSize(),
-                update = { view ->
-                    val provider = cameraProvider ?: return@AndroidView
-                    provider.unbindAll()
-
-                    val preview = Preview.Builder()
-                        .build()
-                        .also {
-                            it.setSurfaceProvider(view.surfaceProvider)
-                        }
-
-                    val imageAnalysis = ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build()
-                        .also {
-                            it.setAnalyzer(
-                                ContextCompat.getMainExecutor(context),
-                                BarcodeAnalyzer { barcode ->
-                                    onBarcodeDetected(barcode)
-                                }
-                            )
-                        }
-
-                    val cameraSelector = androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
-
-                    try {
-                        val camera = provider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
-                        )
-
-                        val exposureRange = camera.cameraInfo.exposureState.exposureCompensationRange
-                        if (exposureRange.contains(cameraSettings.exposureCompensation)) {
-                            camera.cameraControl.setExposureCompensationIndex(
-                                cameraSettings.exposureCompensation
-                            )
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
+                modifier = Modifier.fillMaxSize()
             )
 
             Box(

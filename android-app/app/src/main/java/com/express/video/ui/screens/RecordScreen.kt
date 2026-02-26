@@ -1,7 +1,8 @@
 package com.express.video.ui.screens
 
-import androidx.compose.material3.ExperimentalMaterial3Api
-
+import android.Manifest
+import android.content.pm.PackageManager
+import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -65,6 +67,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.express.video.camera.CameraManager
 import com.express.video.model.CameraSettings
 import com.express.video.model.FocusMode
@@ -100,6 +103,13 @@ fun RecordScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
 
+    var hasAllPermissions by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
     val previewView = remember {
         PreviewView(context).apply {
             layoutParams = ViewGroup.LayoutParams(
@@ -114,6 +124,7 @@ fun RecordScreen(
     var isRecording by remember { mutableStateOf(false) }
     var recordingTime by remember { mutableLongStateOf(0L) }
     var isReady by remember { mutableStateOf(false) }
+    var cameraInitialized by remember { mutableStateOf(false) }
 
     var currentSettings by remember { mutableStateOf(cameraSettings) }
     var activePanel by remember { mutableStateOf(ParamPanel.NONE) }
@@ -125,11 +136,18 @@ fun RecordScreen(
     var debounceJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     LaunchedEffect(Unit) {
+        if (!hasAllPermissions) {
+            onRecordingError("缺少相机或录音权限")
+            return@LaunchedEffect
+        }
+        
         val manager = CameraManager(context, lifecycleOwner, previewView)
         manager.initialize {
+            Log.d("RecordScreen", "Camera initialized successfully")
             manager.applySettings(currentSettings)
             zoomRange = manager.getZoomRange()
             isReady = true
+            cameraInitialized = true
         }
         manager.onRecordingComplete = { file ->
             isRecording = false
@@ -140,14 +158,26 @@ fun RecordScreen(
             onRecordingError(error)
         }
         cameraManager = manager
+    }
 
-        val started = manager.startRecording(
-            trackingNumber = trackingNumber,
-            videoRepository = VideoRepository(context),
-            resolution = videoResolution,
-            bitrateMbps = videoBitrate
-        )
-        if (started) isRecording = true
+    LaunchedEffect(cameraInitialized) {
+        if (cameraInitialized && hasAllPermissions) {
+            delay(500)
+            val manager = cameraManager ?: return@LaunchedEffect
+            val videoRepository = VideoRepository(context)
+            val started = manager.startRecording(
+                trackingNumber = trackingNumber,
+                videoRepository = videoRepository,
+                resolution = videoResolution,
+                bitrateMbps = videoBitrate
+            )
+            if (started) {
+                isRecording = true
+                Log.d("RecordScreen", "Recording started for: $trackingNumber")
+            } else {
+                onRecordingError("无法启动录制")
+            }
+        }
     }
 
     LaunchedEffect(isRecording) {

@@ -6,6 +6,7 @@ import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
@@ -14,17 +15,17 @@ class VideoRepository(private val context: Context) {
 
     companion object {
         const val COLLECTION_NAME = "ExpressVideo"
+        private const val TAG = "VideoRepository"
     }
 
     fun getLocalVideoFile(trackingNumber: String): File {
-        val dir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
-            COLLECTION_NAME
-        )
+        val dir = File(context.cacheDir, COLLECTION_NAME)
         if (!dir.exists()) {
-            dir.mkdirs()
+            val created = dir.mkdirs()
+            Log.d(TAG, "Created cache directory: ${dir.absolutePath}, success: $created")
         }
-        return File(dir, "$trackingNumber.mp4")
+        val safeFileName = trackingNumber.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        return File(dir, "$safeFileName.mp4")
     }
 
     fun saveToMediaStore(trackingNumber: String, file: File): Boolean {

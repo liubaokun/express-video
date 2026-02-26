@@ -32,6 +32,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.Executors
 
 class CameraManager(
     private val context: Context,
@@ -45,6 +46,7 @@ class CameraManager(
     private var _preview: Preview? = null
     
     private var currentRecordingFile: File? = null
+    private var isInitialized = false
 
     var isRecording: Boolean = false
         private set
@@ -52,39 +54,62 @@ class CameraManager(
     var onRecordingComplete: ((File?) -> Unit)? = null
     var onRecordingError: ((String) -> Unit)? = null
 
-    private val mainExecutor: ExecutorService = ContextCompat.getMainExecutor(context) as ExecutorService
+    private val mainExecutor: Executor = ContextCompat.getMainExecutor(context)
 
     fun initialize(onReady: (() -> Unit)? = null) {
+        if (isInitialized) {
+            Log.w("CameraManager", "Camera already initialized")
+            onReady?.invoke()
+            return
+        }
+        
         val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
             ProcessCameraProvider.getInstance(context)
 
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
+                if (cameraProvider == null) {
+                    Log.e("CameraManager", "Camera provider is null")
+                    onRecordingError?.invoke("摄像头初始化失败: 无法获取相机提供者")
+                    return@addListener
+                }
                 setupCamera()
+                isInitialized = true
                 onReady?.invoke()
             } catch (e: Exception) {
                 Log.e("CameraManager", "Camera initialization failed", e)
                 onRecordingError?.invoke("摄像头初始化失败: ${e.message}")
             }
-        }, ContextCompat.getMainExecutor(context))
+        }, mainExecutor)
     }
 
     private fun setupCamera() {
-        val provider = cameraProvider ?: return
-        provider.unbindAll()
+        val provider = cameraProvider ?: run {
+            Log.e("CameraManager", "setupCamera: cameraProvider is null")
+            return
+        }
+        
+        try {
+            provider.unbindAll()
+            Log.d("CameraManager", "Unbound all use cases")
+        } catch (e: Exception) {
+            Log.w("CameraManager", "Failed to unbind all use cases", e)
+        }
 
         _preview = Preview.Builder()
             .build()
             .also { preview ->
                 preview.setSurfaceProvider(previewView.surfaceProvider)
             }
+        Log.d("CameraManager", "Preview use case created")
 
         val recorder = Recorder.Builder()
             .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
             .build()
 
         videoCapture = VideoCapture.withOutput(recorder)
+        Log.d("CameraManager", "VideoCapture use case created")
 
         val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
@@ -95,8 +120,10 @@ class CameraManager(
                 _preview,
                 videoCapture
             )
+            Log.d("CameraManager", "Camera bound to lifecycle successfully")
         } catch (e: Exception) {
             Log.e("CameraManager", "Failed to bind camera use cases", e)
+            onRecordingError?.invoke("绑定摄像头失败: ${e.message}")
         }
     }
 
