@@ -32,8 +32,7 @@ data class MainUiState(
     val errorMessage: String? = null,
     val recordedFile: File? = null,
     val showSettings: Boolean = false,
-    val showSaveDialog: Boolean = false,
-    val needsStoragePermission: Boolean = false
+    val showSaveDialog: Boolean = false
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {

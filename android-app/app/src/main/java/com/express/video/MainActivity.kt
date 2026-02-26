@@ -21,7 +21,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,7 +41,6 @@ import com.express.video.ui.screens.RecordScreen
 import com.express.video.ui.screens.ScanScreen
 import com.express.video.ui.screens.SettingsScreen
 import com.express.video.ui.theme.ExpressVideoTheme
-import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
@@ -56,9 +54,20 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val viewModel: MainViewModel = viewModel()
                     val uiState by viewModel.uiState.collectAsState()
+                    val context = LocalContext.current
 
                     var showConfirmDialog by remember { mutableStateOf(false) }
                     var detectedBarcode by remember { mutableStateOf("") }
+
+                    val storagePermissionLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.RequestPermission()
+                    ) { granted ->
+                        if (granted) {
+                            viewModel.saveRecording()
+                        } else {
+                            viewModel.onPermissionResult(false)
+                        }
+                    }
 
                     when {
                         uiState.showSettings -> {
@@ -77,8 +86,8 @@ class MainActivity : ComponentActivity() {
                                 isUploading = uiState.isUploading,
                                 uploadProgress = uiState.uploadProgress,
                                 uploadStatus = uiState.uploadStatus,
-                                onRecordingComplete = {
-                                    viewModel.onRecordingComplete(null)
+                                onRecordingComplete = { file ->
+                                    viewModel.onRecordingComplete(file)
                                 },
                                 onRecordingError = { viewModel.onRecordingError(it) },
                                 onPause = {},
@@ -120,16 +129,6 @@ class MainActivity : ComponentActivity() {
                             fileSize = formatFileSize(uiState.recordedFile!!.length()),
                             onSave = {
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                                    val context = LocalContext.current
-                                    val storagePermissionLauncher = rememberLauncherForActivityResult(
-                                        contract = ActivityResultContracts.RequestPermission()
-                                    ) { granted ->
-                                        if (granted) {
-                                            viewModel.saveRecording()
-                                        } else {
-                                            viewModel.onPermissionResult(false)
-                                        }
-                                    }
                                     val hasPermission = ContextCompat.checkSelfPermission(
                                         context,
                                         Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -147,7 +146,6 @@ class MainActivity : ComponentActivity() {
                     }
 
                     uiState.errorMessage?.let { message ->
-                        val context = LocalContext.current
                         Toast.makeText(context, message, Toast.LENGTH_LONG).show()
                         viewModel.clearError()
                     }

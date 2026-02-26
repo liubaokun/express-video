@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
@@ -48,6 +49,7 @@ import com.express.video.camera.CameraManager
 import com.express.video.model.VideoResolution
 import com.express.video.repository.VideoRepository
 import kotlinx.coroutines.delay
+import java.io.File
 
 @Composable
 fun RecordScreen(
@@ -58,7 +60,7 @@ fun RecordScreen(
     isUploading: Boolean,
     uploadProgress: Int,
     uploadStatus: String,
-    onRecordingComplete: () -> Unit,
+    onRecordingComplete: (File?) -> Unit,
     onRecordingError: (String) -> Unit,
     onPause: () -> Unit,
     onResume: () -> Unit,
@@ -107,7 +109,7 @@ fun RecordScreen(
         }
         manager.onRecordingComplete = { file ->
             isRecording = false
-            if (file != null) onRecordingComplete()
+            onRecordingComplete(file)
         }
         manager.onRecordingError = { error ->
             isRecording = false
@@ -235,7 +237,7 @@ fun RecordScreen(
             }
 
             Row(
-                horizontalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 if (isRecording && !isUploading) {
                     IconButton(
@@ -260,7 +262,7 @@ fun RecordScreen(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.size(32.dp))
+                    Spacer(modifier = Modifier.width(32.dp))
                 }
 
                 Button(
