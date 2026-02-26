@@ -241,9 +241,9 @@ class CameraManager(
             else -> 138.5177312231 * log10(temp - 10) - 305.0447927307
         }
 
-        val rGain = (red.coerceIn(0.0, 255.0) / 255.0).toFloat()
-        val gGain = (green.coerceIn(0.0, 255.0) / 255.0).toFloat()
-        val bGain = (blue.coerceIn(0.0, 255.0) / 255.0).toFloat()
+        val rGain = (red.coerceAtLeast(0.0).coerceAtMost(255.0) / 255.0).toFloat()
+        val gGain = (green.coerceAtLeast(0.0).coerceAtMost(255.0) / 255.0).toFloat()
+        val bGain = (blue.coerceAtLeast(0.0).coerceAtMost(255.0) / 255.0).toFloat()
 
         val maxGain = maxOf(rGain, gGain, bGain, 1.0f)
         
