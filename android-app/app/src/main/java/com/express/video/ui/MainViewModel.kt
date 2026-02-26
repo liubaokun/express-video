@@ -1,10 +1,13 @@
 package com.express.video.ui
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.express.video.model.AppConfig
-import com.express.video.model.CameraSettings
 import com.express.video.model.SaveMode
 import com.express.video.network.FileUploader
 import com.express.video.network.UploadResult
@@ -28,7 +31,9 @@ data class MainUiState(
     val uploadStatus: String = "",
     val errorMessage: String? = null,
     val recordedFile: File? = null,
-    val showSettings: Boolean = false
+    val showSettings: Boolean = false,
+    val showSaveDialog: Boolean = false,
+    val needsStoragePermission: Boolean = false
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -49,6 +54,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             settingsRepository.configFlow.collect { config ->
                 _uiState.update { it.copy(config = config) }
             }
+        }
+    }
+
+    fun checkStoragePermission(): Boolean {
+        val context = getApplication<Application>()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            true
+        } else {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    fun onPermissionResult(granted: Boolean) {
+        if (!granted) {
+            _uiState.update { it.copy(errorMessage = "需要存储权限才能保存视频") }
         }
     }
 
@@ -79,50 +102,54 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun onRecordingComplete(file: File?) {
-        if (file != null && file.exists()) {
-            val state = _uiState.value
-            if (state.config.saveMode == SaveMode.NETWORK) {
-                uploadFile(file, state.scannedBarcode)
-            } else {
-                saveToMediaStore(file)
+        if (file != null && file.exists() && file.length() > 0) {
+            _uiState.update {
+                it.copy(
+                    recordedFile = file,
+                    showSaveDialog = true
+                )
             }
         } else {
             _uiState.update {
                 it.copy(
-                    errorMessage = "录制失败",
+                    errorMessage = if (file == null) "录制失败：文件为空" else "录制失败：文件不存在或大小为0",
                     isRecording = false
                 )
             }
         }
     }
 
-    fun onRecordingError(message: String) {
-        _uiState.update {
-            it.copy(
-                errorMessage = message,
-                isRecording = false
-            )
+    fun saveRecording() {
+        val state = _uiState.value
+        val file = state.recordedFile ?: return
+
+        if (state.config.saveMode == SaveMode.NETWORK) {
+            uploadFile(file, state.scannedBarcode)
+        } else {
+            saveToMediaStore(file)
         }
     }
 
     private fun saveToMediaStore(file: File) {
         viewModelScope.launch {
+            _uiState.update { it.copy(showSaveDialog = false, isUploading = true, uploadStatus = "正在保存...") }
+            
             val success = videoRepository.saveToMediaStore(_uiState.value.scannedBarcode, file)
             if (success) {
                 videoRepository.deleteLocalFile(file)
                 _uiState.update {
-                    it.copy(
-                        isRecording = false,
-                        uploadStatus = "已保存到本地",
-                        scannedBarcode = "",
-                        isScanning = true
+                    MainUiState(config = it.config).copy(
+                        uploadStatus = "已保存到本地"
                     )
                 }
             } else {
                 _uiState.update {
                     it.copy(
                         errorMessage = "保存失败",
-                        isRecording = false
+                        isRecording = false,
+                        isUploading = false,
+                        showSaveDialog = false,
+                        recordedFile = null
                     )
                 }
             }
@@ -133,6 +160,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val state = _uiState.value
         _uiState.update {
             it.copy(
+                showSaveDialog = false,
                 isUploading = true,
                 uploadProgress = 0,
                 uploadStatus = "正在上传..."
@@ -153,13 +181,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     viewModelScope.launch {
                         videoRepository.deleteLocalFile(file)
                         _uiState.update {
-                            it.copy(
+                            MainUiState(config = it.config).copy(
                                 isUploading = false,
-                                isRecording = false,
                                 uploadProgress = 100,
-                                uploadStatus = "上传成功",
-                                scannedBarcode = "",
-                                isScanning = true
+                                uploadStatus = "上传成功"
                             )
                         }
                     }
@@ -209,12 +234,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updateServerConfig(address: String, port: Int) {
         viewModelScope.launch {
             settingsRepository.updateServerConfig(address, port)
-        }
-    }
-
-    fun updateCameraSettings(settings: CameraSettings) {
-        viewModelScope.launch {
-            settingsRepository.updateCameraSettings(settings)
         }
     }
 

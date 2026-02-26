@@ -22,22 +22,5 @@ enum class VideoResolution(val width: Int, val height: Int, val label: String) {
 }
 
 data class CameraSettings(
-    val exposureCompensation: Int = 0,
-    val whiteBalanceMode: WhiteBalanceMode = WhiteBalanceMode.AUTO,
-    val whiteBalanceTemperature: Int = 5500,
-    val focusMode: FocusMode = FocusMode.AUTO,
-    val iso: Int = 0,
-    val isIsoAuto: Boolean = true,
     val zoomRatio: Float = 1.0f
 )
-
-enum class WhiteBalanceMode(val value: Int, val label: String) {
-    AUTO(1, "自动"),
-    MANUAL(0, "手动")
-}
-
-enum class FocusMode(val value: Int, val label: String) {
-    AUTO(0, "自动"),
-    CONTINUOUS(1, "连续"),
-    MANUAL(2, "手动")
-}

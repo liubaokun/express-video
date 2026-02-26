@@ -3,12 +3,8 @@ package com.express.video.camera
 import android.content.Context
 import android.util.Log
 import android.util.Range
-import android.view.Surface
-import androidx.camera.camera2.interop.Camera2CameraControl
-import androidx.camera.camera2.interop.CaptureRequestOptions
+import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.Camera
-import androidx.camera.core.CameraControl
-import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.Preview
@@ -24,15 +20,11 @@ import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import com.express.video.model.CameraSettings
-import com.express.video.model.FocusMode
 import com.express.video.model.VideoResolution
-import com.express.video.model.WhiteBalanceMode
 import com.google.common.util.concurrent.ListenableFuture
 import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.Executors
 
 class CameraManager(
     private val context: Context,
@@ -47,6 +39,7 @@ class CameraManager(
     
     private var currentRecordingFile: File? = null
     private var isInitialized = false
+    private var videoStabilizationEnabled = false
 
     var isRecording: Boolean = false
         private set
@@ -121,14 +114,39 @@ class CameraManager(
                 videoCapture
             )
             Log.d("CameraManager", "Camera bound to lifecycle successfully")
+            
+            checkVideoStabilization()
+            
         } catch (e: Exception) {
             Log.e("CameraManager", "Failed to bind camera use cases", e)
             onRecordingError?.invoke("绑定摄像头失败: ${e.message}")
         }
     }
 
+    private fun checkVideoStabilization() {
+        val cam = camera ?: return
+        try {
+            val camera2Info = Camera2CameraInfo.from(cam.cameraInfo)
+            val characteristics = camera2Info.getCameraCharacteristic(
+                android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION
+            )
+            if (characteristics != null && characteristics.isNotEmpty()) {
+                for (mode in characteristics) {
+                    if (mode == android.hardware.camera2.CameraCharacteristics.LENS_OPTICAL_STABILIZATION_MODE_ON) {
+                        Log.d("CameraManager", "Optical stabilization available")
+                        break
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("CameraManager", "Video stabilization check failed", e)
+        }
+    }
+
     fun getZoomRange(): Range<Float> {
-        return camera?.cameraInfo?.zoomState?.value?.zoomRatio?.let { Range(1.0f, it) } ?: Range(1.0f, 10.0f)
+        return camera?.cameraInfo?.zoomState?.value?.let { zoomState ->
+            Range(1.0f, zoomState.maxZoomRatio)
+        } ?: Range(1.0f, 10.0f)
     }
 
     fun getCurrentZoom(): Float {
@@ -137,101 +155,6 @@ class CameraManager(
 
     fun setZoomRatio(ratio: Float) {
         camera?.cameraControl?.setZoomRatio(ratio)
-    }
-
-    fun tapToFocus(x: Float, y: Float, viewWidth: Int, viewHeight: Int) {
-        val cam = camera ?: return
-        val factory = SurfaceOrientedMeteringPointFactory(viewWidth.toFloat(), viewHeight.toFloat())
-        val point = factory.createPoint(x, y)
-        val action = FocusMeteringAction.Builder(point)
-            .setAutoCancelDuration(2, TimeUnit.SECONDS)
-            .build()
-        cam.cameraControl.startFocusAndMetering(action)
-    }
-
-    fun applySettings(settings: CameraSettings) {
-        val cam = camera ?: return
-        val cameraControl = cam.cameraControl
-
-        try {
-            val exposureRange = cam.cameraInfo.exposureState.exposureCompensationRange
-            if (exposureRange.contains(settings.exposureCompensation)) {
-                cameraControl.setExposureCompensationIndex(settings.exposureCompensation)
-            }
-
-            cameraControl.setZoomRatio(settings.zoomRatio)
-
-            val camera2Control = Camera2CameraControl.from(cameraControl)
-            val builder = CaptureRequestOptions.Builder()
-
-            when (settings.whiteBalanceMode) {
-                WhiteBalanceMode.AUTO -> {
-                    builder.setCaptureRequestOption(
-                        android.hardware.camera2.CaptureRequest.CONTROL_AWB_MODE,
-                        android.hardware.camera2.CameraMetadata.CONTROL_AWB_MODE_AUTO
-                    )
-                }
-                WhiteBalanceMode.MANUAL -> {
-                    builder.setCaptureRequestOption(
-                        android.hardware.camera2.CaptureRequest.CONTROL_AWB_MODE,
-                        android.hardware.camera2.CameraMetadata.CONTROL_AWB_MODE_OFF
-                    )
-                    val rggb = temperatureToRggb(settings.whiteBalanceTemperature)
-                    builder.setCaptureRequestOption(
-                        android.hardware.camera2.CaptureRequest.COLOR_CORRECTION_GAINS,
-                        rggb
-                    )
-                }
-            }
-
-            when (settings.focusMode) {
-                FocusMode.AUTO -> {
-                    builder.setCaptureRequestOption(
-                        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-                        android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_AUTO
-                    )
-                }
-                FocusMode.CONTINUOUS -> {
-                    builder.setCaptureRequestOption(
-                        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-                        android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO
-                    )
-                }
-                FocusMode.MANUAL -> {
-                    builder.setCaptureRequestOption(
-                        android.hardware.camera2.CaptureRequest.CONTROL_AF_MODE,
-                        android.hardware.camera2.CameraMetadata.CONTROL_AF_MODE_OFF
-                    )
-                }
-            }
-
-            if (!settings.isIsoAuto) {
-                builder.setCaptureRequestOption(
-                    android.hardware.camera2.CaptureRequest.SENSOR_SENSITIVITY,
-                    settings.iso
-                )
-                builder.setCaptureRequestOption(
-                    android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE,
-                    android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_OFF
-                )
-            } else {
-                builder.setCaptureRequestOption(
-                    android.hardware.camera2.CaptureRequest.CONTROL_AE_MODE,
-                    android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_ON
-                )
-            }
-
-            camera2Control.setCaptureRequestOptions(builder.build())
-        } catch (e: Exception) {
-            Log.e("CameraManager", "Failed to apply camera settings", e)
-        }
-    }
-
-    private fun temperatureToRggb(temperature: Int): android.hardware.camera2.params.RggbChannelVector {
-        val temp = temperature.coerceIn(2000, 8000)
-        val r = if (temp <= 4000) 1.0f else (temp - 4000f) / 2000f + 1f
-        val b = if (temp >= 5500) 1.0f else (5500f - temp) / 2000f + 1f
-        return android.hardware.camera2.params.RggbChannelVector(r, 1.0f, 1.0f, b)
     }
 
     fun startRecording(
@@ -246,6 +169,8 @@ class CameraManager(
         currentRecordingFile = videoRepository.getLocalVideoFile(trackingNumber)
         val outputFile = currentRecordingFile!!
 
+        Log.d("CameraManager", "Starting recording to: ${outputFile.absolutePath}")
+
         try {
             val outputOptions = FileOutputOptions.Builder(outputFile).build()
 
@@ -255,23 +180,29 @@ class CameraManager(
                     when (event) {
                         is VideoRecordEvent.Start -> {
                             isRecording = true
-                            Log.d("CameraManager", "Recording started")
+                            Log.d("CameraManager", "Recording started successfully")
                         }
                         is VideoRecordEvent.Finalize -> {
                             isRecording = false
                             if (event.hasError()) {
-                                Log.e("CameraManager", "Recording error: ${event.error}")
+                                Log.e("CameraManager", "Recording error: ${event.error}, cause: ${event.cause}")
                                 onRecordingError?.invoke("录制失败: ${event.cause?.message}")
                                 onRecordingComplete?.invoke(null)
                             } else {
-                                Log.d("CameraManager", "Recording saved: ${outputFile.absolutePath}")
+                                Log.d("CameraManager", "Recording saved: ${outputFile.absolutePath}, size: ${outputFile.length()}")
                                 onRecordingComplete?.invoke(outputFile)
                             }
                             recording = null
                         }
-                        is VideoRecordEvent.Status -> {}
-                        is VideoRecordEvent.Pause -> {}
-                        is VideoRecordEvent.Resume -> {}
+                        is VideoRecordEvent.Status -> {
+                            Log.d("CameraManager", "Recording status: duration=${event.recordingStats.recordedDurationNanos}")
+                        }
+                        is VideoRecordEvent.Pause -> {
+                            Log.d("CameraManager", "Recording paused")
+                        }
+                        is VideoRecordEvent.Resume -> {
+                            Log.d("CameraManager", "Recording resumed")
+                        }
                     }
                 }
             return true
@@ -283,6 +214,7 @@ class CameraManager(
     }
 
     fun stopRecording() {
+        Log.d("CameraManager", "Stopping recording")
         recording?.stop()
         recording = null
         isRecording = false
@@ -303,5 +235,6 @@ class CameraManager(
         camera = null
         videoCapture = null
         _preview = null
+        isInitialized = false
     }
 }

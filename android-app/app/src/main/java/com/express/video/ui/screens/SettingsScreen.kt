@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -21,7 +19,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +26,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,10 +42,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.express.video.model.AppConfig
 import com.express.video.model.CameraSettings
-import com.express.video.model.FocusMode
 import com.express.video.model.SaveMode
 import com.express.video.model.VideoResolution
-import com.express.video.model.WhiteBalanceMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,15 +59,7 @@ fun SettingsScreen(
     var videoBitrate by remember { mutableIntStateOf(config.videoBitrate) }
     var maxRecordDuration by remember { mutableIntStateOf(config.maxRecordDuration) }
 
-    var exposureCompensation by remember { mutableIntStateOf(config.cameraSettings.exposureCompensation) }
-    var whiteBalanceMode by remember { mutableStateOf(config.cameraSettings.whiteBalanceMode) }
-    var whiteBalanceTemperature by remember { mutableIntStateOf(config.cameraSettings.whiteBalanceTemperature) }
-    var focusMode by remember { mutableStateOf(config.cameraSettings.focusMode) }
-    var isIsoAuto by remember { mutableStateOf(config.cameraSettings.isIsoAuto) }
-    var iso by remember { mutableIntStateOf(config.cameraSettings.iso) }
-
-    val exposureFloat = remember { mutableFloatStateOf(exposureCompensation.toFloat()) }
-    val isoValues = listOf(100, 200, 400, 800, 1600, 3200)
+    val bitrateFloat = remember { mutableFloatStateOf(videoBitrate.toFloat()) }
 
     Scaffold(
         topBar = {
@@ -95,15 +81,7 @@ fun SettingsScreen(
                             serverPort = serverPort.toIntOrNull() ?: 8080,
                             videoResolution = videoResolution,
                             videoBitrate = videoBitrate,
-                            cameraSettings = CameraSettings(
-                                exposureCompensation = exposureCompensation,
-                                whiteBalanceMode = whiteBalanceMode,
-                                whiteBalanceTemperature = whiteBalanceTemperature,
-                                focusMode = focusMode,
-                                iso = iso,
-                                isIsoAuto = isIsoAuto,
-                                zoomRatio = config.cameraSettings.zoomRatio
-                            ),
+                            cameraSettings = CameraSettings(),
                             maxRecordDuration = maxRecordDuration
                         )
                         onSave(newConfig)
@@ -193,8 +171,11 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Slider(
-                        value = videoBitrate.toFloat(),
-                        onValueChange = { videoBitrate = it.toInt() },
+                        value = bitrateFloat.floatValue,
+                        onValueChange = {
+                            bitrateFloat.floatValue = it
+                            videoBitrate = it.toInt()
+                        },
                         valueRange = 1f..20f,
                         steps = 18,
                         modifier = Modifier.fillMaxWidth()
@@ -208,114 +189,6 @@ fun SettingsScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
-                }
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "摄像头参数",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "曝光补偿: $exposureCompensation EV",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Slider(
-                        value = exposureFloat.floatValue,
-                        onValueChange = {
-                            exposureFloat.floatValue = it
-                            exposureCompensation = it.toInt()
-                        },
-                        valueRange = -12f..12f,
-                        steps = 23,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "白平衡模式",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = { whiteBalanceMode = WhiteBalanceMode.AUTO },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("自动")
-                        }
-                        Button(
-                            onClick = { whiteBalanceMode = WhiteBalanceMode.MANUAL },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("手动")
-                        }
-                    }
-
-                    if (whiteBalanceMode == WhiteBalanceMode.MANUAL) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "色温: ${whiteBalanceTemperature}K",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Slider(
-                            value = whiteBalanceTemperature.toFloat(),
-                            onValueChange = { whiteBalanceTemperature = it.toInt() },
-                            valueRange = 2000f..8000f,
-                            steps = 59,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "对焦模式",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    selectGroup(
-                        options = FocusMode.entries,
-                        selected = focusMode,
-                        label = { it.label },
-                        onSelect = { focusMode = it }
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "ISO",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = { isIsoAuto = true }) {
-                                Text("自动")
-                            }
-                            Button(onClick = { isIsoAuto = false }) {
-                                Text("手动")
-                            }
-                        }
-                    }
-
-                    if (!isIsoAuto) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(isoValues) { isoValue ->
-                                FilterChip(
-                                    selected = iso == isoValue,
-                                    onClick = { iso = isoValue },
-                                    label = { Text(isoValue.toString()) }
-                                )
-                            }
-                        }
-                    }
                 }
             }
 

@@ -50,15 +50,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.express.video.camera.BarcodeAnalyzer
 import com.express.video.model.AppConfig
-import com.express.video.model.CameraSettings
-import com.google.mlkit.vision.barcode.common.Barcode
 
 @Composable
 fun ScanScreen(
     config: AppConfig,
     onBarcodeDetected: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
-    cameraSettings: CameraSettings
+    cameraSettings: com.express.video.model.CameraSettings = com.express.video.model.CameraSettings()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -172,19 +170,12 @@ fun ScanScreen(
 
                                 val cameraSelector = androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
 
-                                val camera = provider.bindToLifecycle(
+                                provider.bindToLifecycle(
                                     lifecycleOwner,
                                     cameraSelector,
                                     preview,
                                     imageAnalysis
                                 )
-
-                                val exposureRange = camera.cameraInfo.exposureState.exposureCompensationRange
-                                if (exposureRange.contains(cameraSettings.exposureCompensation)) {
-                                    camera.cameraControl.setExposureCompensationIndex(
-                                        cameraSettings.exposureCompensation
-                                    )
-                                }
                                 
                                 isCameraBound = true
                             } catch (e: Exception) {
