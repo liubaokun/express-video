@@ -95,8 +95,8 @@ class VideoRepository(private val context: Context) {
                 Log.d(TAG, "Updated IS_PENDING, rows affected: $updated")
             }
 
-            MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null) { path, uri ->
-                Log.d(TAG, "MediaScanner completed: path=$path, uri=$uri")
+            MediaScannerConnection.scanFile(context, arrayOf(file.absolutePath), null) { path, scanUri ->
+                Log.d(TAG, "MediaScanner completed: path=$path, uri=$scanUri")
             }
             
             Log.d(TAG, "Video saved successfully to MediaStore")

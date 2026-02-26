@@ -2,7 +2,6 @@ package com.express.video.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.text.format.DateFormat
 import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
@@ -96,10 +95,11 @@ fun RecordScreen(
     
     var currentTime by remember { mutableStateOf("") }
     
-    LaunchedEffect(Unit) {
-        while (true) {
+    LaunchedEffect(isRecording) {
+        while (isRecording) {
             currentTime = SimpleDateFormat("H时mm分ss秒", Locale.getDefault()).format(Date())
             delay(1000)
+            recordingTime += 1
         }
     }
 
@@ -109,48 +109,54 @@ fun RecordScreen(
             return@LaunchedEffect
         }
         
-        val manager = CameraManager(context, lifecycleOwner, previewView)
-        manager.initialize {
-            Log.d("RecordScreen", "Camera initialized successfully")
-            zoomRange = manager.getZoomRange()
-            isReady = true
-            cameraInitialized = true
+        try {
+            val manager = CameraManager(context, lifecycleOwner, previewView)
+            manager.initialize {
+                Log.d("RecordScreen", "Camera initialized successfully")
+                zoomRange = manager.getZoomRange()
+                isReady = true
+                cameraInitialized = true
+            }
+            manager.onRecordingComplete = { file ->
+                isRecording = false
+                onRecordingComplete(file)
+            }
+            manager.onRecordingError = { error ->
+                isRecording = false
+                onRecordingError(error)
+            }
+            cameraManager = manager
+        } catch (e: Exception) {
+            Log.e("RecordScreen", "Failed to initialize camera", e)
+            onRecordingError("初始化相机失败: ${e.message}")
         }
-        manager.onRecordingComplete = { file ->
-            isRecording = false
-            onRecordingComplete(file)
-        }
-        manager.onRecordingError = { error ->
-            isRecording = false
-            onRecordingError(error)
-        }
-        cameraManager = manager
     }
 
     LaunchedEffect(cameraInitialized) {
         if (cameraInitialized && hasAllPermissions) {
             delay(500)
-            val manager = cameraManager ?: return@LaunchedEffect
-            val videoRepository = VideoRepository(context)
-            val started = manager.startRecording(
-                trackingNumber = trackingNumber,
-                videoRepository = videoRepository,
-                resolution = videoResolution,
-                bitrateMbps = videoBitrate
-            )
-            if (started) {
-                isRecording = true
-                Log.d("RecordScreen", "Recording started for: $trackingNumber")
-            } else {
-                onRecordingError("无法启动录制")
+            val manager = cameraManager
+            if (manager != null) {
+                try {
+                    val videoRepository = VideoRepository(context)
+                    val started = manager.startRecording(
+                        trackingNumber = trackingNumber,
+                        videoRepository = videoRepository,
+                        resolution = videoResolution,
+                        bitrateMbps = videoBitrate
+                    )
+                    if (started) {
+                        isRecording = true
+                        currentTime = SimpleDateFormat("H时mm分ss秒", Locale.getDefault()).format(Date())
+                        Log.d("RecordScreen", "Recording started for: $trackingNumber")
+                    } else {
+                        onRecordingError("无法启动录制")
+                    }
+                } catch (e: Exception) {
+                    Log.e("RecordScreen", "Failed to start recording", e)
+                    onRecordingError("启动录制失败: ${e.message}")
+                }
             }
-        }
-    }
-
-    LaunchedEffect(isRecording) {
-        while (isRecording) {
-            delay(1000)
-            recordingTime += 1
         }
     }
 
@@ -208,21 +214,23 @@ fun RecordScreen(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-                .background(
-                    color = Color.Black.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(4.dp)
+        if (currentTime.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .background(
+                        color = Color.Black.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = currentTime,
+                    color = Color.White,
+                    fontSize = 14.sp
                 )
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-        ) {
-            Text(
-                text = currentTime,
-                color = Color.White,
-                fontSize = 14.sp
-            )
+            }
         }
 
         if (isUploading) {
