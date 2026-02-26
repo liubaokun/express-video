@@ -243,4 +243,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
+
+    fun onRecordingError(message: String) {
+        _uiState.update {
+            it.copy(
+                errorMessage = message,
+                isRecording = false
+            )
+        }
+    }
 }
