@@ -12,6 +12,7 @@ import com.express.video.model.AppConfig
 import com.express.video.model.CameraSettings
 import com.express.video.model.SaveMode
 import com.express.video.model.VideoResolution
+import com.express.video.model.WhiteBalanceMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -26,6 +27,8 @@ class SettingsRepository(private val context: Context) {
         private val VIDEO_RESOLUTION = intPreferencesKey("video_resolution")
         private val VIDEO_BITRATE = intPreferencesKey("video_bitrate")
         private val ZOOM_RATIO = floatPreferencesKey("zoom_ratio")
+        private val WHITE_BALANCE_MODE = intPreferencesKey("white_balance_mode")
+        private val COLOR_TEMPERATURE = intPreferencesKey("color_temperature")
         private val MAX_RECORD_DURATION = intPreferencesKey("max_record_duration")
     }
 
@@ -38,7 +41,10 @@ class SettingsRepository(private val context: Context) {
                 ?: VideoResolution.RESOLUTION_1080P,
             videoBitrate = prefs[VIDEO_BITRATE] ?: 8,
             cameraSettings = CameraSettings(
-                zoomRatio = prefs[ZOOM_RATIO] ?: 1.0f
+                zoomRatio = prefs[ZOOM_RATIO] ?: 1.0f,
+                whiteBalanceMode = WhiteBalanceMode.entries.getOrNull(prefs[WHITE_BALANCE_MODE] ?: 0)
+                    ?: WhiteBalanceMode.AUTO,
+                colorTemperature = prefs[COLOR_TEMPERATURE] ?: 0
             ),
             maxRecordDuration = prefs[MAX_RECORD_DURATION] ?: 0
         )
@@ -52,6 +58,8 @@ class SettingsRepository(private val context: Context) {
             prefs[VIDEO_RESOLUTION] = config.videoResolution.ordinal
             prefs[VIDEO_BITRATE] = config.videoBitrate
             prefs[ZOOM_RATIO] = config.cameraSettings.zoomRatio
+            prefs[WHITE_BALANCE_MODE] = config.cameraSettings.whiteBalanceMode.ordinal
+            prefs[COLOR_TEMPERATURE] = config.cameraSettings.colorTemperature
             prefs[MAX_RECORD_DURATION] = config.maxRecordDuration
         }
     }

@@ -111,7 +111,9 @@ class MainActivity : ComponentActivity() {
                                     viewModel.onRecordingComplete(file)
                                 },
                                 onRecordingError = { viewModel.onRecordingError(it) },
-                                onStop = {}
+                                onStop = {},
+                                initialColorTemperature = uiState.config.cameraSettings.colorTemperature,
+                                onColorTempChange = { viewModel.updateColorTemperature(it) }
                             )
                         }
                         else -> {

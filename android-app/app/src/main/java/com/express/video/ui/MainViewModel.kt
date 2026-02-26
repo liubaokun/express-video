@@ -8,7 +8,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.express.video.model.AppConfig
+import com.express.video.model.CameraSettings
 import com.express.video.model.SaveMode
+import com.express.video.model.WhiteBalanceMode
 import com.express.video.network.FileUploader
 import com.express.video.network.UploadResult
 import com.express.video.repository.SettingsRepository
@@ -265,6 +267,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun updateWhiteBalance(mode: WhiteBalanceMode) {
+        viewModelScope.launch {
+            val currentSettings = _uiState.value.config.cameraSettings
+            settingsRepository.updateConfig(
+                _uiState.value.config.copy(
+                    cameraSettings = currentSettings.copy(whiteBalanceMode = mode)
+                )
+            )
+        }
+    }
+
+    fun updateColorTemperature(colorTemp: Int) {
+        viewModelScope.launch {
+            val currentSettings = _uiState.value.config.cameraSettings
+            val mode = WhiteBalanceMode.fromColorTemp(colorTemp)
+            settingsRepository.updateConfig(
+                _uiState.value.config.copy(
+                    cameraSettings = currentSettings.copy(
+                        colorTemperature = colorTemp,
+                        whiteBalanceMode = mode
+                    )
+                )
+            )
+        }
     }
 
     fun onRecordingError(message: String) {

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,12 +25,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Icon
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,7 +69,9 @@ fun RecordScreen(
     uploadStatus: String,
     onRecordingComplete: (File?) -> Unit,
     onRecordingError: (String) -> Unit,
-    onStop: () -> Unit
+    onStop: () -> Unit,
+    initialColorTemperature: Int = 5500,
+    onColorTempChange: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -92,8 +100,9 @@ fun RecordScreen(
     var cameraInitialized by remember { mutableStateOf(false) }
 
     var zoomRange by remember { mutableStateOf(android.util.Range(1.0f, 10.0f)) }
-    
     var currentTime by remember { mutableStateOf("") }
+    var colorTemp by remember { mutableIntStateOf(initialColorTemperature) }
+    var isAutoWhiteBalance by remember { mutableStateOf(initialColorTemperature == 0) }
     
     LaunchedEffect(isRecording) {
         while (isRecording) {
@@ -105,7 +114,7 @@ fun RecordScreen(
 
     LaunchedEffect(Unit) {
         if (!hasAllPermissions) {
-            onRecordingError("缺少相机或录音权限")
+            onRecordingError("Camera or audio permission required")
             return@LaunchedEffect
         }
         
@@ -114,6 +123,11 @@ fun RecordScreen(
             manager.initialize {
                 Log.d("RecordScreen", "Camera initialized successfully")
                 zoomRange = manager.getZoomRange()
+                if (initialColorTemperature == 0) {
+                    manager.setWhiteBalance(android.hardware.camera2.CaptureRequest.CONTROL_AWB_MODE_AUTO)
+                } else {
+                    manager.setColorTemperature(initialColorTemperature)
+                }
                 isReady = true
                 cameraInitialized = true
             }
@@ -123,12 +137,22 @@ fun RecordScreen(
             }
             manager.onRecordingError = { error ->
                 isRecording = false
-                onRecordingError(error)
+                onRecordingError(error ?: "Unknown error")
             }
             cameraManager = manager
         } catch (e: Exception) {
             Log.e("RecordScreen", "Failed to initialize camera", e)
-            onRecordingError("初始化相机失败: ${e.message}")
+            onRecordingError("Camera initialization failed: ${e.message}")
+        }
+    }
+
+    LaunchedEffect(colorTemp, isAutoWhiteBalance) {
+        if (isAutoWhiteBalance) {
+            cameraManager?.setWhiteBalance(android.hardware.camera2.CaptureRequest.CONTROL_AWB_MODE_AUTO)
+            onColorTempChange(0)
+        } else {
+            cameraManager?.setColorTemperature(colorTemp)
+            onColorTempChange(colorTemp)
         }
     }
 
@@ -150,11 +174,11 @@ fun RecordScreen(
                         currentTime = SimpleDateFormat("H时mm分ss秒", Locale.getDefault()).format(Date())
                         Log.d("RecordScreen", "Recording started for: $trackingNumber")
                     } else {
-                        onRecordingError("无法启动录制")
+                        onRecordingError("Failed to start recording")
                     }
                 } catch (e: Exception) {
                     Log.e("RecordScreen", "Failed to start recording", e)
-                    onRecordingError("启动录制失败: ${e.message}")
+                    onRecordingError("Recording start failed: ${e.message}")
                 }
             }
         }
@@ -197,12 +221,12 @@ fun RecordScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "本次第 ${recordingCount + 1} 个",
+                    text = "Recording #${recordingCount + 1}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )
                 Text(
-                    text = "单号: $trackingNumber",
+                    text = "Tracking: $trackingNumber",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
@@ -273,6 +297,62 @@ fun RecordScreen(
                         .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.small)
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 )
+                
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Auto",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isAutoWhiteBalance) Color(0xFF4CAF50) else Color.White
+                        )
+                        Switch(
+                            checked = isAutoWhiteBalance,
+                            onCheckedChange = { isAutoWhiteBalance = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color(0xFF4CAF50),
+                                checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.height(24.dp)
+                        )
+                    }
+                    
+                    if (!isAutoWhiteBalance) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "${colorTemp}K",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.small)
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            )
+                            Slider(
+                                value = colorTemp.toFloat(),
+                                onValueChange = { 
+                                    colorTemp = it.toInt()
+                                },
+                                valueRange = 2000f..10000f,
+                                modifier = Modifier.width(120.dp),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color.White,
+                                    activeTrackColor = Color(0xFF4CAF50),
+                                    inactiveTrackColor = Color.Gray
+                                )
+                            )
+                        }
+                    }
+                }
             }
 
             Button(
@@ -286,9 +366,9 @@ fun RecordScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                 enabled = isRecording && !isUploading
             ) {
-                Icon(
+                androidx.compose.material3.Icon(
                     imageVector = Icons.Default.Stop,
-                    contentDescription = "停止录制",
+                    contentDescription = "Stop Recording",
                     tint = Color.White,
                     modifier = Modifier.size(40.dp)
                 )
