@@ -5,7 +5,6 @@ import android.hardware.camera2.CaptureRequest
 import android.util.Log
 import android.util.Range
 import androidx.camera.camera2.interop.Camera2CameraControl
-import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -27,6 +26,7 @@ import java.io.File
 import java.util.concurrent.Executor
 import kotlin.math.log10
 import kotlin.math.pow
+import kotlin.math.abs
 
 class CameraManager(
     private val context: Context,
