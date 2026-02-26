@@ -13,6 +13,7 @@ import com.express.video.network.FileUploader
 import com.express.video.network.UploadResult
 import com.express.video.repository.SettingsRepository
 import com.express.video.repository.VideoRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +33,10 @@ data class MainUiState(
     val errorMessage: String? = null,
     val recordedFile: File? = null,
     val showSettings: Boolean = false,
-    val showSaveDialog: Boolean = false
+    val showSaveDialog: Boolean = false,
+    val recordingCount: Int = 0,
+    val showSaveSuccess: Boolean = false,
+    val savedFileName: String = ""
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -133,13 +137,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.update { it.copy(showSaveDialog = false, isUploading = true, uploadStatus = "正在保存...") }
             
+            val fileName = videoRepository.getFileNameWithTimestamp(_uiState.value.scannedBarcode)
             val success = videoRepository.saveToMediaStore(_uiState.value.scannedBarcode, file)
             if (success) {
                 videoRepository.deleteLocalFile(file)
+                val newCount = _uiState.value.recordingCount + 1
                 _uiState.update {
-                    MainUiState(config = it.config).copy(
-                        uploadStatus = "已保存到本地"
+                    it.copy(
+                        isUploading = false,
+                        isRecording = false,
+                        showSaveSuccess = true,
+                        savedFileName = fileName,
+                        recordingCount = newCount
                     )
+                }
+                
+                viewModelScope.launch {
+                    delay(2000)
+                    resetForNewScan()
                 }
             } else {
                 _uiState.update {
@@ -179,13 +194,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 is UploadResult.Success -> {
                     viewModelScope.launch {
                         videoRepository.deleteLocalFile(file)
+                        val newCount = _uiState.value.recordingCount + 1
                         _uiState.update {
-                            MainUiState(config = it.config).copy(
+                            it.copy(
                                 isUploading = false,
+                                isRecording = false,
                                 uploadProgress = 100,
-                                uploadStatus = "上传成功"
+                                uploadStatus = "上传成功",
+                                showSaveSuccess = true,
+                                savedFileName = videoRepository.getFileNameWithTimestamp(trackingNumber),
+                                recordingCount = newCount
                             )
                         }
+                        delay(2000)
+                        resetForNewScan()
                     }
                 }
                 is UploadResult.Error -> {
@@ -213,8 +235,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun resetForNewScan() {
+        val currentCount = _uiState.value.recordingCount
         _uiState.update {
-            MainUiState(config = it.config)
+            MainUiState(config = it.config, recordingCount = currentCount)
         }
     }
 

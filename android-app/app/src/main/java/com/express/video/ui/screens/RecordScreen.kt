@@ -2,6 +2,7 @@ package com.express.video.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.text.format.DateFormat
 import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
@@ -15,18 +16,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -43,6 +41,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.express.video.camera.CameraManager
@@ -50,20 +49,21 @@ import com.express.video.model.VideoResolution
 import com.express.video.repository.VideoRepository
 import kotlinx.coroutines.delay
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun RecordScreen(
     trackingNumber: String,
     videoResolution: VideoResolution,
     videoBitrate: Int,
-    isPaused: Boolean,
+    recordingCount: Int,
     isUploading: Boolean,
     uploadProgress: Int,
     uploadStatus: String,
     onRecordingComplete: (File?) -> Unit,
     onRecordingError: (String) -> Unit,
-    onPause: () -> Unit,
-    onResume: () -> Unit,
     onStop: () -> Unit
 ) {
     val context = LocalContext.current
@@ -93,6 +93,15 @@ fun RecordScreen(
     var cameraInitialized by remember { mutableStateOf(false) }
 
     var zoomRange by remember { mutableStateOf(android.util.Range(1.0f, 10.0f)) }
+    
+    var currentTime by remember { mutableStateOf("") }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = SimpleDateFormat("H时mm分ss秒", Locale.getDefault()).format(Date())
+            delay(1000)
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (!hasAllPermissions) {
@@ -139,7 +148,7 @@ fun RecordScreen(
     }
 
     LaunchedEffect(isRecording) {
-        while (isRecording && !isPaused) {
+        while (isRecording) {
             delay(1000)
             recordingTime += 1
         }
@@ -182,6 +191,11 @@ fun RecordScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
+                    text = "本次第 ${recordingCount + 1} 个",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+                Text(
                     text = "单号: $trackingNumber",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
@@ -189,9 +203,26 @@ fun RecordScreen(
                 Text(
                     text = formatRecordingTime(recordingTime),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = if (isPaused) Color.Yellow else Color.Red
+                    color = Color.Red
                 )
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .background(
+                    color = Color.Black.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(4.dp)
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = currentTime,
+                color = Color.White,
+                fontSize = 14.sp
+            )
         }
 
         if (isUploading) {
@@ -236,58 +267,23 @@ fun RecordScreen(
                 )
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Button(
+                onClick = {
+                    cameraManager?.stopRecording()
+                    isRecording = false
+                    onStop()
+                },
+                modifier = Modifier.size(80.dp),
+                shape = CircleShape,
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                enabled = isRecording && !isUploading
             ) {
-                if (isRecording && !isUploading) {
-                    IconButton(
-                        onClick = {
-                            if (isPaused) {
-                                cameraManager?.resumeRecording()
-                                onResume()
-                            } else {
-                                cameraManager?.pauseRecording()
-                                onPause()
-                            }
-                        },
-                        modifier = Modifier
-                            .size(64.dp)
-                            .background(Color.White.copy(alpha = 0.3f), CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                            contentDescription = if (isPaused) "继续" else "暂停",
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(32.dp))
-                }
-
-                Button(
-                    onClick = {
-                        cameraManager?.stopRecording()
-                        isRecording = false
-                        onStop()
-                    },
-                    modifier = Modifier.size(80.dp),
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    enabled = isRecording && !isUploading
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "停止录制",
-                        tint = Color.White,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-            }
-
-            if (isPaused) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("已暂停", style = MaterialTheme.typography.bodyMedium, color = Color.Yellow)
+                Icon(
+                    imageVector = Icons.Default.Stop,
+                    contentDescription = "停止录制",
+                    tint = Color.White,
+                    modifier = Modifier.size(40.dp)
+                )
             }
         }
     }

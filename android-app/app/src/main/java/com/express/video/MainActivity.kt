@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import com.express.video.ui.screens.RecordScreen
 import com.express.video.ui.screens.ScanScreen
 import com.express.video.ui.screens.SettingsScreen
 import com.express.video.ui.theme.ExpressVideoTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
@@ -83,7 +85,7 @@ class MainActivity : ComponentActivity() {
                                 trackingNumber = uiState.scannedBarcode,
                                 videoResolution = uiState.config.videoResolution,
                                 videoBitrate = uiState.config.videoBitrate,
-                                isPaused = uiState.isPaused,
+                                recordingCount = uiState.recordingCount,
                                 isUploading = uiState.isUploading,
                                 uploadProgress = uiState.uploadProgress,
                                 uploadStatus = uiState.uploadStatus,
@@ -91,8 +93,6 @@ class MainActivity : ComponentActivity() {
                                     viewModel.onRecordingComplete(file)
                                 },
                                 onRecordingError = { viewModel.onRecordingError(it) },
-                                onPause = {},
-                                onResume = {},
                                 onStop = {}
                             )
                         }
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
                     if (uiState.showSaveDialog && uiState.recordedFile != null) {
                         SaveConfirmDialog(
-                            fileName = "${uiState.scannedBarcode}.mp4",
+                            fileName = uiState.savedFileName.ifEmpty { "${uiState.scannedBarcode}.mp4" },
                             fileSize = formatFileSize(uiState.recordedFile!!.length()),
                             onSave = {
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
@@ -143,6 +143,12 @@ class MainActivity : ComponentActivity() {
                                     viewModel.saveRecording()
                                 }
                             }
+                        )
+                    }
+
+                    if (uiState.showSaveSuccess) {
+                        SaveSuccessDialog(
+                            fileName = uiState.savedFileName
                         )
                     }
 
@@ -216,6 +222,44 @@ fun SaveConfirmDialog(
                 Text("保存")
             }
         }
+    )
+}
+
+@Composable
+fun SaveSuccessDialog(
+    fileName: String
+) {
+    AlertDialog(
+        onDismissRequest = { },
+        title = {
+            Text(
+                text = "保存成功",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "视频已成功保存",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = fileName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "2秒后自动返回...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = { }
     )
 }
 

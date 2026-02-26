@@ -10,6 +10,9 @@ import android.util.Log
 import java.io.File
 import java.io.FileInputStream
 import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class VideoRepository(private val context: Context) {
 
@@ -18,14 +21,22 @@ class VideoRepository(private val context: Context) {
         private const val TAG = "VideoRepository"
     }
 
+    private val timeFormat = SimpleDateFormat("H时mm分ss秒", Locale.getDefault())
+
+    fun getFileNameWithTimestamp(trackingNumber: String): String {
+        val timestamp = timeFormat.format(Date())
+        val safeFileName = trackingNumber.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        return "${safeFileName}_$timestamp.mp4"
+    }
+
     fun getLocalVideoFile(trackingNumber: String): File {
         val dir = File(context.cacheDir, COLLECTION_NAME)
         if (!dir.exists()) {
             val created = dir.mkdirs()
             Log.d(TAG, "Created cache directory: ${dir.absolutePath}, success: $created")
         }
-        val safeFileName = trackingNumber.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-        val file = File(dir, "$safeFileName.mp4")
+        val fileName = getFileNameWithTimestamp(trackingNumber)
+        val file = File(dir, fileName)
         Log.d(TAG, "Video file path: ${file.absolutePath}")
         return file
     }
@@ -43,8 +54,10 @@ class VideoRepository(private val context: Context) {
             return false
         }
 
+        val fileName = file.name
+
         val contentValues = ContentValues().apply {
-            put(MediaStore.Video.Media.DISPLAY_NAME, "$trackingNumber.mp4")
+            put(MediaStore.Video.Media.DISPLAY_NAME, fileName)
             put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
             put(MediaStore.Video.Media.RELATIVE_PATH, "${Environment.DIRECTORY_MOVIES}/$COLLECTION_NAME")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
