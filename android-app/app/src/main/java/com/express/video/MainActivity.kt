@@ -40,10 +40,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.express.video.ui.MainViewModel
 import com.express.video.ui.screens.BarcodeConfirmDialog
 import com.express.video.ui.screens.RecordScreen
+import com.express.video.ui.screens.ScanMode
 import com.express.video.ui.screens.ScanScreen
 import com.express.video.ui.screens.SettingsScreen
 import com.express.video.ui.theme.ExpressVideoTheme
 import kotlinx.coroutines.delay
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
@@ -61,6 +63,7 @@ class MainActivity : ComponentActivity() {
 
                     var showConfirmDialog by remember { mutableStateOf(false) }
                     var detectedBarcode by remember { mutableStateOf("") }
+                    var showServerConfigScan by remember { mutableStateOf(false) }
 
                     val storagePermissionLauncher = rememberLauncherForActivityResult(
                         contract = ActivityResultContracts.RequestPermission()
@@ -73,11 +76,26 @@ class MainActivity : ComponentActivity() {
                     }
 
                     when {
+                        showServerConfigScan -> {
+                            ScanScreen(
+                                config = uiState.config,
+                                onBarcodeDetected = { },
+                                onNavigateToSettings = { },
+                                scanMode = ScanMode.SERVER_CONFIG,
+                                onServerConfigScanned = { address, port ->
+                                    showServerConfigScan = false
+                                    viewModel.updateServerConfig(address, port)
+                                    Toast.makeText(context, "Server configured: $address:$port", Toast.LENGTH_SHORT).show()
+                                },
+                                onBack = { showServerConfigScan = false }
+                            )
+                        }
                         uiState.showSettings -> {
                             SettingsScreen(
                                 config = uiState.config,
                                 onSave = { viewModel.updateConfig(it) },
-                                onBack = { viewModel.showSettings(false) }
+                                onBack = { viewModel.showSettings(false) },
+                                onScanServerQr = { showServerConfigScan = true }
                             )
                         }
                         uiState.isRecording -> {
@@ -172,7 +190,7 @@ fun SaveConfirmDialog(
         onDismissRequest = { },
         title = {
             Text(
-                text = "录制完成",
+                text = "Recording Complete",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -180,7 +198,7 @@ fun SaveConfirmDialog(
         text = {
             Column {
                 Text(
-                    text = "视频已录制完成",
+                    text = "Video saved successfully",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -189,7 +207,7 @@ fun SaveConfirmDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "文件名:",
+                        text = "File:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -205,7 +223,7 @@ fun SaveConfirmDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "文件大小:",
+                        text = "Size:",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -219,7 +237,7 @@ fun SaveConfirmDialog(
         },
         confirmButton = {
             Button(onClick = onSave) {
-                Text("保存")
+                Text("Save")
             }
         }
     )
@@ -233,7 +251,7 @@ fun SaveSuccessDialog(
         onDismissRequest = { },
         title = {
             Text(
-                text = "保存成功",
+                text = "Save Success",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.primary
@@ -242,7 +260,7 @@ fun SaveSuccessDialog(
         text = {
             Column {
                 Text(
-                    text = "视频已成功保存",
+                    text = "Video saved successfully",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -253,7 +271,7 @@ fun SaveSuccessDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "2秒后自动返回...",
+                    text = "Auto close in 2 seconds...",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

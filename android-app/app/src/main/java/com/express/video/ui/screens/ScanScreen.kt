@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -50,13 +51,22 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.express.video.camera.BarcodeAnalyzer
 import com.express.video.model.AppConfig
+import com.express.video.model.CameraSettings
+
+enum class ScanMode {
+    BARCODE,
+    SERVER_CONFIG
+}
 
 @Composable
 fun ScanScreen(
     config: AppConfig,
     onBarcodeDetected: (String) -> Unit,
     onNavigateToSettings: () -> Unit,
-    cameraSettings: com.express.video.model.CameraSettings = com.express.video.model.CameraSettings()
+    cameraSettings: CameraSettings = CameraSettings(),
+    scanMode: ScanMode = ScanMode.BARCODE,
+    onServerConfigScanned: ((String, Int) -> Unit)? = null,
+    onBack: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -91,13 +101,13 @@ fun ScanScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (!hasCameraPermission || !hasRecordAudioPermission) {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.RECORD_AUDIO
-                )
-            )
+        if (!hasCameraPermission || (scanMode == ScanMode.BARCODE && !hasRecordAudioPermission)) {
+            val permissions = if (scanMode == ScanMode.BARCODE) {
+                arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+            } else {
+                arrayOf(Manifest.permission.CAMERA)
+            }
+            permissionLauncher.launch(permissions)
         }
     }
 
@@ -163,7 +173,16 @@ fun ScanScreen(
                                         it.setAnalyzer(
                                             ContextCompat.getMainExecutor(context),
                                             BarcodeAnalyzer { barcode ->
-                                                onBarcodeDetected(barcode)
+                                                if (scanMode == ScanMode.SERVER_CONFIG) {
+                                                    val parts = barcode.split(":")
+                                                    if (parts.size == 2) {
+                                                        val address = parts[0]
+                                                        val port = parts[1].toIntOrNull() ?: 8080
+                                                        onServerConfigScanned?.invoke(address, port)
+                                                    }
+                                                } else {
+                                                    onBarcodeDetected(barcode)
+                                                }
                                             }
                                         )
                                     }
@@ -205,7 +224,11 @@ fun ScanScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "将快递条码放入框内扫描",
+                    text = if (scanMode == ScanMode.SERVER_CONFIG) {
+                        "Scan server QR code"
+                    } else {
+                        "Scan express barcode"
+                    },
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
                     modifier = Modifier
@@ -222,35 +245,52 @@ fun ScanScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("需要相机权限才能扫描条码")
+                    Text("Camera permission required")
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = {
-                        permissionLauncher.launch(
-                            arrayOf(
-                                Manifest.permission.CAMERA,
-                                Manifest.permission.RECORD_AUDIO
-                            )
-                        )
+                        val permissions = if (scanMode == ScanMode.BARCODE) {
+                            arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+                        } else {
+                            arrayOf(Manifest.permission.CAMERA)
+                        }
+                        permissionLauncher.launch(permissions)
                     }) {
-                        Text("请求权限")
+                        Text("Grant Permission")
                     }
                 }
             }
         }
 
-        IconButton(
-            onClick = onNavigateToSettings,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .padding(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "设置",
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
+        if (scanMode == ScanMode.SERVER_CONFIG && onBack != null) {
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        } else {
+            IconButton(
+                onClick = onNavigateToSettings,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
         }
     }
 }
@@ -263,10 +303,10 @@ fun BarcodeConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("扫描成功") },
+        title = { Text("Scan Success") },
         text = {
             Column {
-                Text("快递单号：")
+                Text("Tracking Number:")
                 Text(
                     text = barcode,
                     style = MaterialTheme.typography.headlineSmall,
@@ -281,12 +321,12 @@ fun BarcodeConfirmDialog(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("确定，开始录制")
+                Text("Start Recording")
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onCancel) {
-                Text("重新扫描")
+                Text("Rescan")
             }
         }
     )

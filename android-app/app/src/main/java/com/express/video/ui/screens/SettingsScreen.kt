@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,7 +51,8 @@ import com.express.video.model.VideoResolution
 fun SettingsScreen(
     config: AppConfig,
     onSave: (AppConfig) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onScanServerQr: (() -> Unit)? = null
 ) {
     var saveMode by remember { mutableStateOf(config.saveMode) }
     var serverAddress by remember { mutableStateOf(config.serverAddress) }
@@ -64,12 +66,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("设置") },
+                title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = "Back"
                         )
                     }
                 },
@@ -87,7 +89,7 @@ fun SettingsScreen(
                         onSave(newConfig)
                         onBack()
                     }) {
-                        Text("保存")
+                        Text("Save")
                     }
                 }
             )
@@ -107,7 +109,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "保存模式",
+                        text = "Save Mode",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -116,8 +118,8 @@ fun SettingsScreen(
                         selected = saveMode,
                         label = { mode ->
                             when (mode) {
-                                SaveMode.LOCAL -> "本地保存"
-                                SaveMode.NETWORK -> "局域网传输"
+                                SaveMode.LOCAL -> "Local"
+                                SaveMode.NETWORK -> "Network"
                             }
                         },
                         onSelect = { saveMode = it }
@@ -125,18 +127,34 @@ fun SettingsScreen(
 
                     if (saveMode == SaveMode.NETWORK) {
                         Spacer(modifier = Modifier.height(16.dp))
+                        
+                        if (onScanServerQr != null) {
+                            Button(
+                                onClick = onScanServerQr,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCodeScanner,
+                                    contentDescription = null,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text("Scan Server QR Code")
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        
                         OutlinedTextField(
                             value = serverAddress,
                             onValueChange = { serverAddress = it },
-                            label = { Text("服务器地址") },
-                            placeholder = { Text("例如: 192.168.1.100") },
+                            label = { Text("Server Address") },
+                            placeholder = { Text("e.g. 192.168.1.100") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = serverPort,
                             onValueChange = { serverPort = it },
-                            label = { Text("端口") },
+                            label = { Text("Port") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -150,12 +168,12 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "视频设置",
+                        text = "Video Settings",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "分辨率",
+                        text = "Resolution",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     selectGroup(
@@ -167,7 +185,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "码率: ${videoBitrate} Mbps",
+                        text = "Bitrate: ${videoBitrate} Mbps",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Slider(
@@ -185,7 +203,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = if (maxRecordDuration == 0) "" else maxRecordDuration.toString(),
                         onValueChange = { maxRecordDuration = it.toIntOrNull() ?: 0 },
-                        label = { Text("最大录制时长(秒，0=无限制)") },
+                        label = { Text("Max Duration (sec, 0=unlimited)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )

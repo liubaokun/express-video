@@ -1,5 +1,5 @@
 @echo off
-title Express Video Server
+title Express Video Receiver
 
 echo ========================================
 echo    Express Video Receiver Service
@@ -8,6 +8,7 @@ echo.
 
 cd /d "%~dp0desktop-app"
 
+REM Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python not found. Please install Python 3.8+
@@ -16,6 +17,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Create venv if not exists
 if not exist "venv" (
     echo [INFO] Creating virtual environment...
     python -m venv venv
@@ -26,8 +28,10 @@ if not exist "venv" (
     )
 )
 
+REM Activate venv
 call venv\Scripts\activate.bat
 
+REM Install dependencies
 pip show PyQt5 >nul 2>&1
 if errorlevel 1 (
     echo [INFO] Installing dependencies...
@@ -42,6 +46,6 @@ if errorlevel 1 (
 echo [INFO] Starting service...
 echo.
 
-python main.py
+pythonw main.py
 
-pause
+exit
