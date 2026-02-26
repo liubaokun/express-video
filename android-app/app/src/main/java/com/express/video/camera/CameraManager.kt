@@ -30,7 +30,7 @@ import com.express.video.model.VideoResolution
 import com.express.video.model.WhiteBalanceMode
 import com.google.common.util.concurrent.ListenableFuture
 import java.io.File
-import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.Executors
 
