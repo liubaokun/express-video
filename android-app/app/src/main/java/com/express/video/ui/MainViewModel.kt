@@ -294,6 +294,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun updateServerConfig(address: String, port: Int) {
+        // 立即更新 UI 状态
+        _uiState.update { current ->
+            current.copy(
+                config = current.config.copy(
+                    serverAddress = address,
+                    serverPort = port
+                )
+            )
+        }
+        
+        // 异步持久化
         viewModelScope.launch {
             settingsRepository.updateServerConfig(address, port)
         }
