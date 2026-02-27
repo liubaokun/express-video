@@ -1,5 +1,7 @@
 import socket
 import sys
+import os
+import psutil
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
@@ -22,16 +24,36 @@ from PyQt5.QtWidgets import (
     QMenu,
     QAction,
     QDialog,
-    QFrame
+    QFrame,
+    QMessageBox
 )
 from PyQt5.QtGui import QIcon, QFont, QPixmap, QImage
 from PyQt5.QtCore import Qt as QtCoreQt
 
 from config.config_manager import ConfigManager
-from server.http_server import HttpServer
+from server.http_server import HttpServer, is_port_in_use
 
 import qrcode
 from io import BytesIO
+
+
+def cleanup_old_instances():
+    """清理后台残留的 Python 进程"""
+    current_pid = os.getpid()
+    cleaned = []
+    
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            if proc.info['pid'] != current_pid and 'python' in proc.info['name'].lower():
+                cmdline = ' '.join(proc.cmdline())
+                if 'main.py' in cmdline or 'desktop-app' in cmdline:
+                    print(f"清理旧进程：{proc.info['pid']}")
+                    proc.terminate()
+                    cleaned.append(proc.info['pid'])
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+    
+    return cleaned
 
 
 class SuccessDialog(QDialog):
@@ -83,6 +105,7 @@ class ServerThread(QThread):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        
         self.config_manager = ConfigManager()
         self.server: Optional[HttpServer] = None
         self.server_thread: Optional[ServerThread] = None
@@ -269,6 +292,9 @@ class MainWindow(QMainWindow):
 
     def _start_server(self):
         try:
+            if is_port_in_use(self.config_manager.port):
+                raise Exception(f"端口 {self.config_manager.port} 已被占用，请关闭其他程序或更换端口")
+            
             self.server = HttpServer(
                 save_path=self.config_manager.save_path,
                 port=self.config_manager.port,
@@ -289,7 +315,12 @@ class MainWindow(QMainWindow):
             self._log(f"服务已启动，端口：{self.config_manager.port}")
 
         except Exception as e:
-            self._log(f"启动失败：{str(e)}")
+            error_msg = str(e)
+            if "端口" in error_msg and "占用" in error_msg:
+                error_msg += "\n\n请点击\"设置\"按钮更换端口，或关闭占用该端口的程序"
+                QMessageBox.critical(self, "端口被占用", error_msg)
+            
+            self._log(f"启动失败：{error_msg}")
             self.status_label.setText("启动失败")
             self.status_label.setStyleSheet("color: #f44336;")
 
@@ -360,6 +391,10 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    cleaned = cleanup_old_instances()
+    if cleaned:
+        print(f"已清理 {len(cleaned)} 个旧进程")
+    
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
