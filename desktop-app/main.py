@@ -37,24 +37,24 @@ from io import BytesIO
 class SuccessDialog(QDialog):
     def __init__(self, filename: str, size: str, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Video Received")
+        self.setWindowTitle("视频接收成功")
         self.setFixedSize(300, 150)
         self.setWindowFlags(self.windowFlags() | QtCoreQt.WindowStaysOnTopHint)
         
         layout = QVBoxLayout(self)
         layout.setSpacing(10)
         
-        title_label = QLabel("Video Received Successfully")
+        title_label = QLabel("视频接收成功")
         title_label.setFont(QFont("Arial", 14, QFont.Bold))
         title_label.setStyleSheet("color: #4CAF50;")
         title_label.setAlignment(QtCoreQt.AlignCenter)
         layout.addWidget(title_label)
         
-        file_label = QLabel(f"File: {filename}")
+        file_label = QLabel(f"文件：{filename}")
         file_label.setAlignment(QtCoreQt.AlignCenter)
         layout.addWidget(file_label)
         
-        size_label = QLabel(f"Size: {size}")
+        size_label = QLabel(f"大小：{size}")
         size_label.setAlignment(QtCoreQt.AlignCenter)
         layout.addWidget(size_label)
         
@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         self._load_config()
 
     def _init_ui(self):
-        self.setWindowTitle("Express Video Receiver")
+        self.setWindowTitle("快递视频接收器")
         self.setMinimumSize(550, 600)
 
         central_widget = QWidget()
@@ -102,10 +102,10 @@ class MainWindow(QMainWindow):
         layout.setSpacing(12)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        status_group = QGroupBox("Service Status")
+        status_group = QGroupBox("服务状态")
         status_layout = QVBoxLayout(status_group)
 
-        self.status_label = QLabel("Stopped")
+        self.status_label = QLabel("已停止")
         self.status_label.setFont(QFont("Arial", 14))
         self.status_label.setStyleSheet("color: #666;")
         status_layout.addWidget(self.status_label)
@@ -113,12 +113,12 @@ class MainWindow(QMainWindow):
         self.ip_label = QLabel(f"IP: {self._get_local_ip()}")
         status_layout.addWidget(self.ip_label)
 
-        self.port_label = QLabel(f"Port: {self.config_manager.port}")
+        self.port_label = QLabel(f"端口：{self.config_manager.port}")
         status_layout.addWidget(self.port_label)
 
         layout.addWidget(status_group)
 
-        qr_group = QGroupBox("QR Code (Scan to configure)")
+        qr_group = QGroupBox("二维码 (手机扫描配置)")
         qr_layout = QVBoxLayout(qr_group)
         qr_layout.setAlignment(QtCoreQt.AlignCenter)
 
@@ -126,33 +126,33 @@ class MainWindow(QMainWindow):
         self.qr_label.setFixedSize(200, 200)
         self.qr_label.setAlignment(QtCoreQt.AlignCenter)
         self.qr_label.setStyleSheet("background-color: white; border: 1px solid #ccc;")
-        self.qr_label.setText("Start service to show QR")
+        self.qr_label.setText("启动服务后显示二维码")
         qr_layout.addWidget(self.qr_label)
 
-        self.qr_hint = QLabel("Scan with phone app to configure server")
+        self.qr_hint = QLabel("使用手机 APP 扫描二维码配置服务器")
         self.qr_hint.setStyleSheet("color: #666; font-size: 11px;")
         qr_layout.addWidget(self.qr_hint)
 
         layout.addWidget(qr_group)
 
-        settings_group = QGroupBox("Settings")
+        settings_group = QGroupBox("设置")
         settings_layout = QVBoxLayout(settings_group)
 
         path_layout = QHBoxLayout()
-        path_layout.addWidget(QLabel("Save Path:"))
+        path_layout.addWidget(QLabel("保存路径:"))
 
         self.path_edit = QLineEdit()
         self.path_edit.setReadOnly(True)
         path_layout.addWidget(self.path_edit)
 
-        self.browse_btn = QPushButton("Browse...")
+        self.browse_btn = QPushButton("浏览...")
         self.browse_btn.clicked.connect(self._browse_folder)
         path_layout.addWidget(self.browse_btn)
 
         settings_layout.addLayout(path_layout)
 
         port_layout = QHBoxLayout()
-        port_layout.addWidget(QLabel("Port:"))
+        port_layout.addWidget(QLabel("端口:"))
 
         self.port_spin = QSpinBox()
         self.port_spin.setRange(1, 65535)
@@ -165,19 +165,19 @@ class MainWindow(QMainWindow):
         layout.addWidget(settings_group)
 
         control_layout = QHBoxLayout()
-        self.start_btn = QPushButton("Start Service")
+        self.start_btn = QPushButton("启动服务")
         self.start_btn.clicked.connect(self._toggle_server)
         self.start_btn.setMinimumHeight(40)
         control_layout.addWidget(self.start_btn)
 
-        self.apply_btn = QPushButton("Apply Settings")
+        self.apply_btn = QPushButton("应用设置")
         self.apply_btn.clicked.connect(self._apply_settings)
         self.apply_btn.setMinimumHeight(40)
         control_layout.addWidget(self.apply_btn)
 
         layout.addLayout(control_layout)
 
-        log_group = QGroupBox("Received Videos")
+        log_group = QGroupBox("已接收的视频")
         log_layout = QVBoxLayout(log_group)
 
         self.log_text = QTextEdit()
@@ -216,15 +216,15 @@ class MainWindow(QMainWindow):
 
     def _init_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
-        self.tray_icon.setToolTip("Express Video Receiver")
+        self.tray_icon.setToolTip("快递视频接收器")
 
         tray_menu = QMenu()
 
-        show_action = QAction("Show Window", self)
+        show_action = QAction("显示窗口", self)
         show_action.triggered.connect(self.show)
         tray_menu.addAction(show_action)
 
-        quit_action = QAction("Exit", self)
+        quit_action = QAction("退出", self)
         quit_action.triggered.connect(self._quit_app)
         tray_menu.addAction(quit_action)
 
@@ -235,7 +235,7 @@ class MainWindow(QMainWindow):
     def _load_config(self):
         self.path_edit.setText(self.config_manager.save_path)
         self.port_spin.setValue(self.config_manager.port)
-        self.port_label.setText(f"Port: {self.config_manager.port}")
+        self.port_label.setText(f"端口：{self.config_manager.port}")
 
         Path(self.config_manager.save_path).mkdir(parents=True, exist_ok=True)
 
@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
     def _browse_folder(self):
         folder = QFileDialog.getExistingDirectory(
             self,
-            "Select Save Path",
+            "选择保存路径",
             self.path_edit.text()
         )
         if folder:
@@ -254,12 +254,12 @@ class MainWindow(QMainWindow):
     def _apply_settings(self):
         self.config_manager.save_path = self.path_edit.text()
         self.config_manager.port = self.port_spin.value()
-        self.port_label.setText(f"Port: {self.port_spin.value()}")
+        self.port_label.setText(f"端口：{self.port_spin.value()}")
 
         if self.server and self.server.is_running:
-            self._log("Settings saved. Restart service to apply.")
+            self._log("设置已保存，重启服务后生效")
         else:
-            self._log("Settings saved.")
+            self._log("设置已保存")
 
     def _toggle_server(self):
         if self.server and self.server.is_running:
@@ -278,19 +278,19 @@ class MainWindow(QMainWindow):
 
             self.server.start()
 
-            self.status_label.setText("Running")
+            self.status_label.setText("运行中")
             self.status_label.setStyleSheet("color: #4CAF50; font-weight: bold;")
-            self.start_btn.setText("Stop Service")
+            self.start_btn.setText("停止服务")
 
             local_ip = self._get_local_ip()
             server_address = f"{local_ip}:{self.config_manager.port}"
             self._generate_qr_code(server_address)
 
-            self._log(f"Service started on port {self.config_manager.port}")
+            self._log(f"服务已启动，端口：{self.config_manager.port}")
 
         except Exception as e:
-            self._log(f"Start failed: {str(e)}")
-            self.status_label.setText("Start Failed")
+            self._log(f"启动失败：{str(e)}")
+            self.status_label.setText("启动失败")
             self.status_label.setStyleSheet("color: #f44336;")
 
     def _stop_server(self):
@@ -298,22 +298,22 @@ class MainWindow(QMainWindow):
             self.server.stop()
             self.server = None
 
-        self.status_label.setText("Stopped")
+        self.status_label.setText("已停止")
         self.status_label.setStyleSheet("color: #666;")
-        self.start_btn.setText("Start Service")
+        self.start_btn.setText("启动服务")
         self.qr_label.clear()
-        self.qr_label.setText("Start service to show QR")
+        self.qr_label.setText("启动服务后显示二维码")
 
-        self._log("Service stopped")
+        self._log("服务已停止")
 
     def _on_file_received(self, tracking_number: str, filepath: str, size: str):
-        self._log(f"Received: {tracking_number} ({size})")
+        self._log(f"已接收：{tracking_number} ({size})")
         
         filename = Path(filepath).name
         
         self.tray_icon.showMessage(
-            "Video Received",
-            f"{filename}\nSize: {size}",
+            "视频已接收",
+            f"{filename}\n大小：{size}",
             QSystemTrayIcon.Information,
             3000
         )
@@ -322,7 +322,7 @@ class MainWindow(QMainWindow):
         dialog.exec_()
 
     def _on_error(self, error: str):
-        self._log(f"Error: {error}")
+        self._log(f"错误：{error}")
 
     def _log(self, message: str):
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -352,8 +352,8 @@ class MainWindow(QMainWindow):
         event.ignore()
         self.hide()
         self.tray_icon.showMessage(
-            "Express Video Receiver",
-            "Minimized to system tray",
+            "快递视频接收器",
+            "已最小化到系统托盘",
             QSystemTrayIcon.Information,
             2000
         )
