@@ -185,6 +185,11 @@ class MainWindow(QMainWindow):
         port_layout.addStretch()
         settings_layout.addLayout(port_layout)
 
+        # 自动保存状态提示
+        self.save_status_label = QLabel("")
+        self.save_status_label.setStyleSheet("color: #4CAF50; font-size: 11px;")
+        settings_layout.addWidget(self.save_status_label)
+
         layout.addWidget(settings_group)
 
         control_layout = QHBoxLayout()
@@ -192,11 +197,6 @@ class MainWindow(QMainWindow):
         self.start_btn.clicked.connect(self._toggle_server)
         self.start_btn.setMinimumHeight(40)
         control_layout.addWidget(self.start_btn)
-
-        self.apply_btn = QPushButton("应用设置")
-        self.apply_btn.clicked.connect(self._apply_settings)
-        self.apply_btn.setMinimumHeight(40)
-        control_layout.addWidget(self.apply_btn)
 
         layout.addLayout(control_layout)
 
@@ -209,6 +209,10 @@ class MainWindow(QMainWindow):
         log_layout.addWidget(self.log_text)
 
         layout.addWidget(log_group)
+
+        # 自动保存连接
+        self.path_edit.textChanged.connect(self._auto_save_settings)
+        self.port_spin.valueChanged.connect(self._auto_save_settings)
 
     def _generate_qr_code(self, data: str):
         try:
@@ -274,15 +278,19 @@ class MainWindow(QMainWindow):
         if folder:
             self.path_edit.setText(folder)
 
-    def _apply_settings(self):
+    def _auto_save_settings(self):
+        """自动保存设置"""
         self.config_manager.save_path = self.path_edit.text()
         self.config_manager.port = self.port_spin.value()
         self.port_label.setText(f"端口：{self.port_spin.value()}")
+        
+        # 显示保存提示
+        self.save_status_label.setText("✓ 已自动保存")
+        QTimer.singleShot(2000, lambda: self.save_status_label.setText(""))
 
-        if self.server and self.server.is_running:
-            self._log("设置已保存，重启服务后生效")
-        else:
-            self._log("设置已保存")
+    def _apply_settings(self):
+        """废弃：现在自动保存，此方法保留仅为兼容"""
+        self._auto_save_settings()
 
     def _toggle_server(self):
         if self.server and self.server.is_running:
@@ -292,12 +300,20 @@ class MainWindow(QMainWindow):
 
     def _start_server(self):
         try:
-            if is_port_in_use(self.config_manager.port):
-                raise Exception(f"端口 {self.config_manager.port} 已被占用，请关闭其他程序或更换端口")
+            # 使用当前输入框的最新配置
+            save_path = self.path_edit.text()
+            port = self.port_spin.value()
+            
+            # 确保配置已保存
+            self.config_manager.save_path = save_path
+            self.config_manager.port = port
+            
+            if is_port_in_use(port):
+                raise Exception(f"端口 {port} 已被占用，请关闭其他程序或更换端口")
             
             self.server = HttpServer(
-                save_path=self.config_manager.save_path,
-                port=self.config_manager.port,
+                save_path=save_path,
+                port=port,
                 on_file_received=self._on_file_received,
                 on_error=self._on_error
             )
@@ -309,10 +325,10 @@ class MainWindow(QMainWindow):
             self.start_btn.setText("停止服务")
 
             local_ip = self._get_local_ip()
-            server_address = f"{local_ip}:{self.config_manager.port}"
+            server_address = f"{local_ip}:{port}"
             self._generate_qr_code(server_address)
 
-            self._log(f"服务已启动，端口：{self.config_manager.port}")
+            self._log(f"服务已启动，端口：{port}")
 
         except Exception as e:
             error_msg = str(e)
