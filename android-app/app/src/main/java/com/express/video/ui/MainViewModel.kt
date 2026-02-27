@@ -139,7 +139,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.update { it.copy(showSaveDialog = false, isUploading = true, uploadStatus = "正在保存...") }
             
-            val fileName = videoRepository.getFileNameWithTimestamp(_uiState.value.scannedBarcode)
             val success = videoRepository.saveToMediaStore(_uiState.value.scannedBarcode, file)
             if (success) {
                 videoRepository.deleteLocalFile(file)
@@ -149,15 +148,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         isUploading = false,
                         isRecording = false,
                         showSaveSuccess = true,
-                        savedFileName = fileName,
+                        savedFileName = file.name,
                         recordingCount = newCount
                     )
                 }
                 
-                viewModelScope.launch {
-                    delay(2000)
-                    resetForNewScan()
-                }
+                delay(2000)
+                resetForNewScan()
             } else {
                 _uiState.update {
                     it.copy(
@@ -230,7 +227,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 uploadProgress = 100,
                                 uploadStatus = "上传成功",
                                 showSaveSuccess = true,
-                                savedFileName = videoRepository.getFileNameWithTimestamp(trackingNumber),
+                                savedFileName = file.name,
                                 recordingCount = newCount
                             )
                         }
@@ -269,9 +266,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun resetForNewScan() {
-        val currentCount = _uiState.value.recordingCount
         _uiState.update {
-            MainUiState(config = it.config, recordingCount = currentCount)
+            it.copy(
+                scannedBarcode = "",
+                isScanning = true,
+                isRecording = false,
+                isPaused = false,
+                uploadProgress = 0,
+                isUploading = false,
+                uploadStatus = "",
+                recordedFile = null,
+                showSaveDialog = false,
+                showSaveSuccess = false,
+                savedFileName = ""
+            )
         }
     }
 

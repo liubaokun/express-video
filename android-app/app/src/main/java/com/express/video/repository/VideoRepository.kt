@@ -21,12 +21,11 @@ class VideoRepository(private val context: Context) {
         private const val TAG = "VideoRepository"
     }
 
-    private val timeFormat = SimpleDateFormat("H时mm分ss秒", Locale.getDefault())
+    private val timeFormat = SimpleDateFormat("H时m分s秒", Locale.getDefault())
 
     fun getFileNameWithTimestamp(trackingNumber: String): String {
         val timestamp = timeFormat.format(Date())
-        val safeFileName = trackingNumber.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-        return "${safeFileName}_$timestamp.mp4"
+        return "${trackingNumber}_$timestamp.mp4"
     }
 
     fun getLocalVideoFile(trackingNumber: String): File {

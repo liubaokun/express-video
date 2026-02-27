@@ -70,7 +70,7 @@ class HttpServer:
 
                 self._ensure_save_path()
 
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                timestamp = datetime.now().strftime("%H时%M分%S秒")
                 filename = f"{secure_filename(tracking_number)}_{timestamp}.mp4"
                 if not filename.endswith('.mp4'):
                     filename += '.mp4'

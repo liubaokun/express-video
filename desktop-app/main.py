@@ -103,6 +103,8 @@ class ServerThread(QThread):
 
 
 class MainWindow(QMainWindow):
+    file_received_signal = pyqtSignal(str, str, str)
+
     def __init__(self):
         super().__init__()
         
@@ -113,6 +115,9 @@ class MainWindow(QMainWindow):
         self._init_ui()
         self._init_tray()
         self._load_config()
+        
+        # 连接信号
+        self.file_received_signal.connect(self._handle_file_received_ui)
 
     def _init_ui(self):
         self.setWindowTitle("快递视频接收器")
@@ -354,6 +359,11 @@ class MainWindow(QMainWindow):
         self._log("服务已停止")
 
     def _on_file_received(self, tracking_number: str, filepath: str, size: str):
+        # 此方法在服务器线程中调用，发射信号到主线程
+        self.file_received_signal.emit(tracking_number, filepath, size)
+
+    def _handle_file_received_ui(self, tracking_number: str, filepath: str, size: str):
+        # 此方法在主线程执行，安全进行 UI 操作
         self._log(f"已接收：{tracking_number} ({size})")
         
         filename = Path(filepath).name
@@ -366,7 +376,8 @@ class MainWindow(QMainWindow):
         )
         
         dialog = SuccessDialog(filename, size, self)
-        dialog.exec_()
+        dialog.setAttribute(QtCoreQt.WA_DeleteOnClose)
+        dialog.show()  # 使用 show 而不是 exec_，这样不会阻塞后续操作
 
     def _on_error(self, error: str):
         self._log(f"错误：{error}")
