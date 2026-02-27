@@ -302,12 +302,6 @@ fun updateServerConfig(address: String, port: Int) {
             settingsRepository.updateSaveMode(SaveMode.NETWORK)
         }
     }
-        
-        // 异步持久化
-        viewModelScope.launch {
-            settingsRepository.updateServerConfig(address, port)
-        }
-    }
 
     fun showSettings(show: Boolean) {
         _uiState.update { it.copy(showSettings = show) }
