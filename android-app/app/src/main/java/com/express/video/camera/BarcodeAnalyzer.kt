@@ -59,13 +59,15 @@ class BarcodeAnalyzer(
         for (barcode in barcodes) {
             val rawValue = barcode.rawValue
             if (!rawValue.isNullOrEmpty()) {
+                Log.d("BarcodeAnalyzer", "Detected barcode: format=${barcode.format}, value=$rawValue")
                 if (barcode.format == Barcode.FORMAT_CODE_128 ||
                     barcode.format == Barcode.FORMAT_CODE_39 ||
                     barcode.format == Barcode.FORMAT_CODE_93 ||
                     barcode.format == Barcode.FORMAT_EAN_13 ||
                     barcode.format == Barcode.FORMAT_EAN_8 ||
                     barcode.format == Barcode.FORMAT_UPC_A ||
-                    barcode.format == Barcode.FORMAT_UPC_E
+                    barcode.format == Barcode.FORMAT_UPC_E ||
+                    barcode.format == Barcode.FORMAT_QR_CODE
                 ) {
                     lastDetectedTime = System.currentTimeMillis()
                     onBarcodeDetected(rawValue)

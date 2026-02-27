@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -146,6 +147,9 @@ fun ScanScreen(
         }
     }
 
+    var scanSuccess by remember { mutableStateOf<String?>(null) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -173,12 +177,18 @@ fun ScanScreen(
                                         it.setAnalyzer(
                                             ContextCompat.getMainExecutor(context),
                                             BarcodeAnalyzer { barcode ->
+                                                Log.d("ScanScreen", "Barcode detected: $barcode, mode: $scanMode")
                                                 if (scanMode == ScanMode.SERVER_CONFIG) {
                                                     val parts = barcode.split(":")
-                                                    if (parts.size == 2) {
+                                                    if (parts.size >= 2) {
                                                         val address = parts[0]
-                                                        val port = parts[1].toIntOrNull() ?: 8080
+                                                        val port = parts.last().toIntOrNull() ?: 8080
+                                                        Log.d("ScanScreen", "Server config scanned: $address:$port")
+                                                        scanSuccess = "$address:$port"
+                                                        showSuccessDialog = true
                                                         onServerConfigScanned?.invoke(address, port)
+                                                    } else {
+                                                        Log.w("ScanScreen", "Invalid server QR format: $barcode")
                                                     }
                                                 } else {
                                                     onBarcodeDetected(barcode)
@@ -216,6 +226,39 @@ fun ScanScreen(
                         shape = RoundedCornerShape(8.dp)
                     )
             )
+
+            if (showSuccessDialog) {
+                AlertDialog(
+                    onDismissRequest = { 
+                        showSuccessDialog = false
+                        scanSuccess = null
+                        onBack?.invoke()
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(48.dp)
+                        )
+                    },
+                    title = { Text("扫描成功") },
+                    text = {
+                        Text("服务器配置：$scanSuccess")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { 
+                                showSuccessDialog = false
+                                scanSuccess = null
+                                onBack?.invoke()
+                            }
+                        ) {
+                            Text("确定")
+                        }
+                    }
+                )
+            }
 
             Column(
                 modifier = Modifier
