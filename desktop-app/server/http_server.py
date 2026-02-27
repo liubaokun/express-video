@@ -79,7 +79,31 @@ class HttpServer:
 
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] 保存文件：{filepath}")
                 file.save(str(filepath))
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] 保存成功")
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] 保存成功，正在复查视频...")
+
+                # 视频复查逻辑
+                is_verified = False
+                duration = 0
+                verify_msg = ""
+                try:
+                    import cv2
+                    cap = cv2.VideoCapture(str(filepath))
+                    if cap.isOpened():
+                        fps = cap.get(cv2.CAP_PROP_FPS)
+                        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                        if fps > 0 and frame_count > 0:
+                            duration = frame_count / fps
+                            is_verified = True
+                            verify_msg = f"复查通过：时长 {duration:.2f} 秒"
+                        else:
+                            verify_msg = "复查失败：无法读取帧信息"
+                        cap.release()
+                    else:
+                        verify_msg = "复查失败：无法打开视频文件结构"
+                except Exception as ve:
+                    verify_msg = f"复查异常：{str(ve)}"
+                
+                print(f"[{datetime.now().strftime('%H:%M:%S')}] {verify_msg}")
 
                 if self.on_file_received:
                     self.on_file_received(
@@ -90,7 +114,10 @@ class HttpServer:
 
                 return jsonify({
                     "status": "success",
-                    "message": f"File saved: {filename}",
+                    "verified": is_verified,
+                    "duration": round(duration, 2),
+                    "message": verify_msg,
+                    "filename": filename,
                     "path": str(filepath)
                 })
 

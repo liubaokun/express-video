@@ -1,7 +1,6 @@
 import socket
 import sys
 import os
-import psutil
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
@@ -39,17 +38,26 @@ from io import BytesIO
 
 def cleanup_old_instances():
     """清理后台残留的 Python 进程"""
+    try:
+        import psutil
+    except ImportError:
+        print("[警告] 未安装 psutil 库，跳过进程清理")
+        return []
+        
     current_pid = os.getpid()
     cleaned = []
     
     for proc in psutil.process_iter(['pid', 'name']):
         try:
-            if proc.info['pid'] != current_pid and 'python' in proc.info['name'].lower():
-                cmdline = ' '.join(proc.cmdline())
-                if 'main.py' in cmdline or 'desktop-app' in cmdline:
-                    print(f"清理旧进程：{proc.info['pid']}")
-                    proc.terminate()
-                    cleaned.append(proc.info['pid'])
+            p_name = proc.info.get('name')
+            if p_name and proc.info['pid'] != current_pid and 'python' in p_name.lower():
+                p_cmdline = proc.cmdline()
+                if p_cmdline:
+                    cmdline = ' '.join(p_cmdline)
+                    if 'main.py' in cmdline or 'desktop-app' in cmdline:
+                        print(f"清理旧进程：{proc.info['pid']}")
+                        proc.terminate()
+                        cleaned.append(proc.info['pid'])
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
     
@@ -250,6 +258,11 @@ class MainWindow(QMainWindow):
         self.tray_icon = QSystemTrayIcon(self)
         self.tray_icon.setToolTip("快递视频接收器")
 
+        # 设置一个默认图标，避免某些系统显示异常
+        pixmap = QPixmap(32, 32)
+        pixmap.fill(QtCoreQt.transparent)
+        self.tray_icon.setIcon(QIcon(pixmap))
+
         tray_menu = QMenu()
 
         show_action = QAction("显示窗口", self)
@@ -364,9 +377,8 @@ class MainWindow(QMainWindow):
 
     def _handle_file_received_ui(self, tracking_number: str, filepath: str, size: str):
         # 此方法在主线程执行，安全进行 UI 操作
-        self._log(f"已接收：{tracking_number} ({size})")
-        
         filename = Path(filepath).name
+        self._log(f"已接收：{filename} ({size})")
         
         self.tray_icon.showMessage(
             "视频已接收",
@@ -418,6 +430,7 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    print("正在启动程序...")
     cleaned = cleanup_old_instances()
     if cleaned:
         print(f"已清理 {len(cleaned)} 个旧进程")
@@ -432,4 +445,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        error_msg = traceback.format_exc()
+        print(error_msg)
+        with open("error_log.txt", "w", encoding="utf-8") as f:
+            f.write(error_msg)
+        input("程序运行出错，按回车键退出...")

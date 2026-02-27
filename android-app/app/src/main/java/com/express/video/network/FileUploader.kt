@@ -20,7 +20,11 @@ import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
 
 sealed class UploadResult {
-    data class Success(val message: String) : UploadResult()
+    data class Success(
+        val message: String,
+        val verified: Boolean = true,
+        val duration: Double = 0.0
+    ) : UploadResult()
     data class Error(val message: String) : UploadResult()
     data class Progress(
         val percent: Int,
@@ -143,11 +147,27 @@ class FileUploader {
                 Log.d("FileUploader", "Response code: ${response.code}")
 
                 if (response.isSuccessful) {
-                    val responseBody = response.body?.string() ?: "上传成功"
-                    Log.d("FileUploader", "Upload successful: $responseBody")
+                    val responseBody = response.body?.string() ?: ""
+                    Log.d("FileUploader", "Upload response: $responseBody")
+                    
+                    var verified = true
+                    var duration = 0.0
+                    var message = "上传成功"
+                    
+                    try {
+                        if (responseBody.isNotEmpty()) {
+                            val json = org.json.JSONObject(responseBody)
+                            verified = json.optBoolean("verified", true)
+                            duration = json.optDouble("duration", 0.0)
+                            message = json.optString("message", "上传成功")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("FileUploader", "Failed to parse response JSON", e)
+                    }
+
                     mainHandler.post {
                         onProgress(UploadResult.Progress(100, fileLength, fileLength))
-                        onProgress(UploadResult.Success(responseBody))
+                        onProgress(UploadResult.Success(message, verified, duration))
                     }
                 } else {
                     val errorMsg = "服务器返回错误：${response.code} ${response.message}"

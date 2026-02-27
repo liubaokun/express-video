@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,10 +21,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -206,6 +211,11 @@ fun RecordScreen(
                             cameraManager?.setZoomRatio(newZoom)
                         }
                     }
+                    .pointerInput(Unit) {
+                        detectTapGestures { offset ->
+                            cameraManager?.focusToPoint(offset.x, offset.y)
+                        }
+                    }
             )
         }
 
@@ -337,19 +347,53 @@ fun RecordScreen(
                                     .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.small)
                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                             )
-                            Slider(
-                                value = colorTemp.toFloat(),
-                                onValueChange = { 
-                                    colorTemp = it.toInt()
-                                },
-                                valueRange = 2000f..10000f,
-                                modifier = Modifier.width(120.dp),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = Color.White,
-                                    activeTrackColor = Color(0xFF4CAF50),
-                                    inactiveTrackColor = Color.Gray
+                            
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                IconButton(
+                                    onClick = { 
+                                        colorTemp = (colorTemp - 100).coerceAtLeast(2000)
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowBackIosNew,
+                                        contentDescription = "减少",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+
+                                Slider(
+                                    value = colorTemp.toFloat(),
+                                    onValueChange = { 
+                                        colorTemp = it.toInt()
+                                    },
+                                    valueRange = 2000f..10000f,
+                                    modifier = Modifier.width(100.dp),
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = Color.White,
+                                        activeTrackColor = Color(0xFF4CAF50),
+                                        inactiveTrackColor = Color.Gray
+                                    )
                                 )
-                            )
+
+                                IconButton(
+                                    onClick = { 
+                                        colorTemp = (colorTemp + 100).coerceAtMost(10000)
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowForwardIos,
+                                        contentDescription = "增加",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
                         }
                     }
                 }

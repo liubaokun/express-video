@@ -178,6 +178,16 @@ class CameraManager(
         camera?.cameraControl?.setZoomRatio(ratio)
     }
 
+    fun focusToPoint(x: Float, y: Float) {
+        val cam = camera ?: return
+        val factory = previewView.meteringPointFactory
+        val point = factory.createPoint(x, y)
+        val action = androidx.camera.core.FocusMeteringAction.Builder(point)
+            .setAutoCancelDuration(3, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+        cam.cameraControl.startFocusAndMetering(action)
+    }
+
     fun startRecording(
         trackingNumber: String,
         videoRepository: com.express.video.repository.VideoRepository,

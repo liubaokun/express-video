@@ -220,12 +220,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     viewModelScope.launch {
                         videoRepository.deleteLocalFile(file)
                         val newCount = _uiState.value.recordingCount + 1
+                        
+                        val statusText = if (result.verified) {
+                            "上传成功 (时长: ${result.duration}s)"
+                        } else {
+                            "上传完成但校验失败: ${result.message}"
+                        }
+
                         _uiState.update {
                             it.copy(
                                 isUploading = false,
                                 isRecording = false,
                                 uploadProgress = 100,
-                                uploadStatus = "上传成功",
+                                uploadStatus = statusText,
                                 showSaveSuccess = true,
                                 savedFileName = file.name,
                                 recordingCount = newCount
