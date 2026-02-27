@@ -205,14 +205,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ) { result ->
             when (result) {
                 is UploadResult.Progress -> {
+                    val writtenMB = result.bytesWritten / (1024.0 * 1024.0)
+                    val totalMB = result.totalBytes / (1024.0 * 1024.0)
+                    val statusText = if (result.totalBytes > 0) {
+                        "已上传 %.1f MB / %.1f MB".format(writtenMB, totalMB)
+                    } else {
+                        "正在上传..."
+                    }
                     _uiState.update { 
                         it.copy(
                             uploadProgress = result.percent,
-                            uploadStatus = when (result.percent) {
-                                0 -> "正在上传..."
-                                100 -> "上传完成"
-                                else -> "上传中 ${result.percent}%"
-                            }
+                            uploadStatus = statusText
                         ) 
                     }
                 }

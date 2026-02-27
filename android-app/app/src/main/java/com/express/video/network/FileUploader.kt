@@ -7,7 +7,12 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okio.Buffer
+import okio.BufferedSink
+import okio.ForwardingSink
+import okio.buffer
 import java.io.File
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -17,7 +22,50 @@ import java.util.concurrent.TimeUnit
 sealed class UploadResult {
     data class Success(val message: String) : UploadResult()
     data class Error(val message: String) : UploadResult()
-    data class Progress(val percent: Int) : UploadResult()
+    data class Progress(
+        val percent: Int,
+        val bytesWritten: Long = 0,
+        val totalBytes: Long = 0
+    ) : UploadResult()
+}
+
+class ProgressRequestBody(
+    private val requestBody: RequestBody,
+    private val onProgressUpdate: (bytesWritten: Long, contentLength: Long) -> Unit
+) : RequestBody() {
+
+    override fun contentType() = requestBody.contentType()
+
+    override fun contentLength(): Long {
+        return try {
+            requestBody.contentLength()
+        } catch (e: Exception) {
+            -1L
+        }
+    }
+
+    override fun writeTo(sink: BufferedSink) {
+        val contentLength = contentLength()
+        var bytesWritten = 0L
+        var lastReportTime = 0L
+
+        val progressSink = object : ForwardingSink(sink) {
+            override fun write(source: Buffer, byteCount: Long) {
+                super.write(source, byteCount)
+                bytesWritten += byteCount
+
+                val now = System.currentTimeMillis()
+                if (now - lastReportTime >= 100 || bytesWritten == contentLength) {
+                    lastReportTime = now
+                    onProgressUpdate(bytesWritten, contentLength)
+                }
+            }
+        }
+
+        val bufferedProgressSink = progressSink.buffer()
+        requestBody.writeTo(bufferedProgressSink)
+        bufferedProgressSink.flush()
+    }
 }
 
 class FileUploader {
@@ -63,11 +111,24 @@ class FileUploader {
                     return@Thread
                 }
 
-                val requestBody = file.asRequestBody("video/mp4".toMediaType())
+                val fileLength = file.length()
+                val originalRequestBody = file.asRequestBody("video/mp4".toMediaType())
+                
+                val progressRequestBody = ProgressRequestBody(originalRequestBody) { bytesWritten, contentLength ->
+                    val percent = if (contentLength > 0) {
+                        ((bytesWritten * 100) / contentLength).toInt().coerceIn(0, 100)
+                    } else {
+                        0
+                    }
+                    mainHandler.post {
+                        onProgress(UploadResult.Progress(percent, bytesWritten, contentLength))
+                    }
+                }
+
                 val multipartBody = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("trackingNumber", trackingNumber)
-                    .addFormDataPart("file", file.name, requestBody)
+                    .addFormDataPart("file", file.name, progressRequestBody)
                     .build()
 
                 val request = Request.Builder()
@@ -75,7 +136,7 @@ class FileUploader {
                     .post(multipartBody)
                     .build()
 
-                mainHandler.post { onProgress(UploadResult.Progress(0)) }
+                mainHandler.post { onProgress(UploadResult.Progress(0, 0, fileLength)) }
 
                 Log.d("FileUploader", "Sending request...")
                 val response = client.newCall(request).execute()
@@ -85,7 +146,7 @@ class FileUploader {
                     val responseBody = response.body?.string() ?: "上传成功"
                     Log.d("FileUploader", "Upload successful: $responseBody")
                     mainHandler.post {
-                        onProgress(UploadResult.Progress(100))
+                        onProgress(UploadResult.Progress(100, fileLength, fileLength))
                         onProgress(UploadResult.Success(responseBody))
                     }
                 } else {
