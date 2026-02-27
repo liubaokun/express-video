@@ -66,12 +66,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text("设置") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "返回"
                         )
                     }
                 },
@@ -89,7 +89,7 @@ fun SettingsScreen(
                         onSave(newConfig)
                         onBack()
                     }) {
-                        Text("Save")
+                        Text("保存")
                     }
                 }
             )
@@ -109,7 +109,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Save Mode",
+                        text = "保存方式",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -118,8 +118,8 @@ fun SettingsScreen(
                         selected = saveMode,
                         label = { mode ->
                             when (mode) {
-                                SaveMode.LOCAL -> "Local"
-                                SaveMode.NETWORK -> "Network"
+                                SaveMode.LOCAL -> "本地保存"
+                                SaveMode.NETWORK -> "网络上传"
                             }
                         },
                         onSelect = { saveMode = it }
@@ -138,7 +138,7 @@ fun SettingsScreen(
                                     contentDescription = null,
                                     modifier = Modifier.padding(end = 8.dp)
                                 )
-                                Text("Scan Server QR Code")
+                                Text("扫描服务器二维码")
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                         }
@@ -146,15 +146,15 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = serverAddress,
                             onValueChange = { serverAddress = it },
-                            label = { Text("Server Address") },
-                            placeholder = { Text("e.g. 192.168.1.100") },
+                            label = { Text("服务器地址") },
+                            placeholder = { Text("例如: 192.168.1.100") },
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = serverPort,
                             onValueChange = { serverPort = it },
-                            label = { Text("Port") },
+                            label = { Text("端口") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -168,12 +168,12 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Video Settings",
+                        text = "视频设置",
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Resolution",
+                        text = "分辨率",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     selectGroup(
@@ -185,7 +185,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Bitrate: ${videoBitrate} Mbps",
+                        text = "码率: ${videoBitrate} Mbps",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Slider(
@@ -203,7 +203,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = if (maxRecordDuration == 0) "" else maxRecordDuration.toString(),
                         onValueChange = { maxRecordDuration = it.toIntOrNull() ?: 0 },
-                        label = { Text("Max Duration (sec, 0=unlimited)") },
+                        label = { Text("最大时长 (秒, 0=不限制)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )

@@ -221,12 +221,12 @@ fun RecordScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Recording #${recordingCount + 1}",
+                    text = "第 ${recordingCount + 1} 段视频",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )
                 Text(
-                    text = "Tracking: $trackingNumber",
+                    text = "单号: $trackingNumber",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
@@ -308,7 +308,7 @@ fun RecordScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Auto",
+                            text = "自动",
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isAutoWhiteBalance) Color(0xFF4CAF50) else Color.White
                         )
@@ -368,7 +368,7 @@ fun RecordScreen(
             ) {
                 androidx.compose.material3.Icon(
                     imageVector = Icons.Default.Stop,
-                    contentDescription = "Stop Recording",
+                    contentDescription = "停止录制",
                     tint = Color.White,
                     modifier = Modifier.size(40.dp)
                 )

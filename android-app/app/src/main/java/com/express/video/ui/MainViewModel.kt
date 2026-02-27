@@ -174,12 +174,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun uploadFile(file: File, trackingNumber: String) {
         val state = _uiState.value
+        
+        if (state.config.serverAddress.isBlank()) {
+            _uiState.update {
+                it.copy(
+                    showSaveDialog = false,
+                    isUploading = true,
+                    uploadProgress = 0,
+                    uploadStatus = "服务器地址未配置，正在保存到本地..."
+                )
+            }
+            saveToMediaStore(file)
+            return
+        }
+
         _uiState.update {
             it.copy(
                 showSaveDialog = false,
                 isUploading = true,
                 uploadProgress = 0,
-                uploadStatus = "正在上传..."
+                uploadStatus = "正在连接服务器 ${state.config.serverAddress}:${state.config.serverPort}..."
             )
         }
 
@@ -191,7 +205,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ) { result ->
             when (result) {
                 is UploadResult.Progress -> {
-                    _uiState.update { it.copy(uploadProgress = result.percent) }
+                    _uiState.update { 
+                        it.copy(
+                            uploadProgress = result.percent,
+                            uploadStatus = if (result.percent == 0) "正在上传..." else "上传中 ${result.percent}%"
+                        ) 
+                    }
                 }
                 is UploadResult.Success -> {
                     viewModelScope.launch {
@@ -214,11 +233,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 is UploadResult.Error -> {
                     viewModelScope.launch {
+                        _uiState.update {
+                            it.copy(
+                                isUploading = true,
+                                uploadStatus = "上传失败: ${result.message}，正在保存到本地..."
+                            )
+                        }
                         saveToMediaStore(file)
                         _uiState.update {
                             it.copy(
-                                isUploading = false,
-                                uploadStatus = "上传失败，已保存到本地: ${result.message}"
+                                uploadStatus = "已保存到本地 (上传失败: ${result.message})"
                             )
                         }
                     }

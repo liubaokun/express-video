@@ -225,9 +225,9 @@ fun ScanScreen(
             ) {
                 Text(
                     text = if (scanMode == ScanMode.SERVER_CONFIG) {
-                        "Scan server QR code"
+                        "扫描服务器二维码"
                     } else {
-                        "Scan express barcode"
+                        "扫描快递条码"
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White,
@@ -245,7 +245,7 @@ fun ScanScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Camera permission required")
+                    Text("需要相机权限")
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = {
                         val permissions = if (scanMode == ScanMode.BARCODE) {
@@ -255,7 +255,7 @@ fun ScanScreen(
                         }
                         permissionLauncher.launch(permissions)
                     }) {
-                        Text("Grant Permission")
+                        Text("授权")
                     }
                 }
             }
@@ -271,7 +271,7 @@ fun ScanScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
+                    contentDescription = "返回",
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
                 )
@@ -286,7 +286,7 @@ fun ScanScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = "设置",
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
                 )
@@ -303,10 +303,10 @@ fun BarcodeConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text("Scan Success") },
+        title = { Text("扫描成功") },
         text = {
             Column {
-                Text("Tracking Number:")
+                Text("快递单号:")
                 Text(
                     text = barcode,
                     style = MaterialTheme.typography.headlineSmall,
@@ -321,12 +321,12 @@ fun BarcodeConfirmDialog(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Start Recording")
+                Text("开始录制")
             }
         },
         dismissButton = {
             OutlinedButton(onClick = onCancel) {
-                Text("Rescan")
+                Text("重新扫描")
             }
         }
     )
