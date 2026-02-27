@@ -75,6 +75,12 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
+                    LaunchedEffect(uiState.config.serverAddress, uiState.config.serverPort) {
+                        if (uiState.config.serverAddress.isNotEmpty() && !showServerConfigScan && !uiState.showSettings && !uiState.isRecording) {
+                            viewModel.showSettings(true)
+                        }
+                    }
+
                     when {
                         showServerConfigScan -> {
                             ScanScreen(
@@ -85,7 +91,6 @@ class MainActivity : ComponentActivity() {
                                 onServerConfigScanned = { address, port ->
                                     showServerConfigScan = false
                                     viewModel.updateServerConfig(address, port)
-                                    viewModel.showSettings(true)
                                     Toast.makeText(context, "服务器配置成功：$address:$port", Toast.LENGTH_LONG).show()
                                 },
                                 onBack = { showServerConfigScan = false }

@@ -232,7 +232,7 @@ fun ScanScreen(
                     onDismissRequest = { 
                         showSuccessDialog = false
                         scanSuccess = null
-                        onServerConfigScanned?.invoke(scanSuccess?.split(":")?.get(0) ?: "", scanSuccess?.split(":")?.get(1)?.toIntOrNull() ?: 8080)
+                        // 不在这里调用回调，只在确认按钮调用
                     },
                     icon = {
                         Icon(
