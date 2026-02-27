@@ -84,10 +84,13 @@ class FileUploader {
                 if (response.isSuccessful) {
                     mainHandler.post { onProgress(UploadResult.Progress(100)) }
                     val responseBody = response.body?.string() ?: "上传成功"
-                    mainHandler.post { onProgress(UploadResult.Success(responseBody)) }
                     Log.d("FileUploader", "Upload successful: $responseBody")
+                    // 延迟 300ms 发送成功消息，让用户看到 100% 进度
+                    mainHandler.postDelayed({
+                        onProgress(UploadResult.Success(responseBody))
+                    }, 300)
                 } else {
-                    val errorMsg = "服务器返回错误: ${response.code} ${response.message}"
+                    val errorMsg = "服务器返回错误：${response.code} ${response.message}"
                     mainHandler.post { onProgress(UploadResult.Error(errorMsg)) }
                     Log.e("FileUploader", errorMsg)
                 }

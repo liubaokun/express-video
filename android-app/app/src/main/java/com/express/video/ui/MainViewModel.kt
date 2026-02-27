@@ -208,12 +208,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     _uiState.update { 
                         it.copy(
                             uploadProgress = result.percent,
-                            uploadStatus = if (result.percent == 0) "正在上传..." else "上传中 ${result.percent}%"
+                            uploadStatus = when (result.percent) {
+                                0 -> "正在上传..."
+                                100 -> "上传完成"
+                                else -> "上传中 ${result.percent}%"
+                            }
                         ) 
                     }
                 }
                 is UploadResult.Success -> {
                     viewModelScope.launch {
+                        // 先显示 100% 进度
+                        _uiState.update {
+                            it.copy(
+                                uploadProgress = 100,
+                                uploadStatus = "上传完成"
+                            )
+                        }
+                        // 短暂延迟后显示成功
+                        delay(300)
                         videoRepository.deleteLocalFile(file)
                         val newCount = _uiState.value.recordingCount + 1
                         _uiState.update {
@@ -227,6 +240,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 recordingCount = newCount
                             )
                         }
+                        // 停留 2 秒显示成功对话框
                         delay(2000)
                         resetForNewScan()
                     }

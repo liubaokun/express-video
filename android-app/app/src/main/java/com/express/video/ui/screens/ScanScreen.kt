@@ -149,6 +149,8 @@ fun ScanScreen(
 
     var scanSuccess by remember { mutableStateOf<String?>(null) }
     var showSuccessDialog by remember { mutableStateOf(false) }
+    var scannedAddress by remember { mutableStateOf<String?>(null) }
+    var scannedPort by remember { mutableIntStateOf(8080) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -185,8 +187,9 @@ fun ScanScreen(
                                                         val port = parts.last().toIntOrNull() ?: 8080
                                                         Log.d("ScanScreen", "Server config scanned: $address:$port")
                                                         scanSuccess = "$address:$port"
+                                                        scannedAddress = address
+                                                        scannedPort = port
                                                         showSuccessDialog = true
-                                                        onServerConfigScanned?.invoke(address, port)
                                                     } else {
                                                         Log.w("ScanScreen", "Invalid server QR format: $barcode")
                                                     }
@@ -232,7 +235,7 @@ fun ScanScreen(
                     onDismissRequest = { 
                         showSuccessDialog = false
                         scanSuccess = null
-                        onBack?.invoke()
+                        scannedAddress = null
                     },
                     icon = {
                         Icon(
@@ -244,14 +247,16 @@ fun ScanScreen(
                     },
                     title = { Text("扫描成功") },
                     text = {
-                        Text("服务器配置：$scanSuccess")
+                        Text("服务器配置：$scanSuccess\n\n即将跳转到设置页面确认...")
                     },
                     confirmButton = {
                         Button(
                             onClick = { 
                                 showSuccessDialog = false
+                                // 调用回调，会跳转到设置页面
+                                onServerConfigScanned?.invoke(scannedAddress ?: "", scannedPort)
                                 scanSuccess = null
-                                onBack?.invoke()
+                                scannedAddress = null
                             }
                         ) {
                             Text("确定")
