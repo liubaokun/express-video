@@ -232,7 +232,7 @@ fun ScanScreen(
                     onDismissRequest = { 
                         showSuccessDialog = false
                         scanSuccess = null
-                        onBack?.invoke()
+                        onServerConfigScanned?.invoke(scanSuccess?.split(":")?.get(0) ?: "", scanSuccess?.split(":")?.get(1)?.toIntOrNull() ?: 8080)
                     },
                     icon = {
                         Icon(
@@ -250,8 +250,11 @@ fun ScanScreen(
                         Button(
                             onClick = { 
                                 showSuccessDialog = false
+                                val parts = scanSuccess?.split(":")
+                                val address = parts?.get(0) ?: ""
+                                val port = parts?.get(1)?.toIntOrNull() ?: 8080
+                                onServerConfigScanned?.invoke(address, port)
                                 scanSuccess = null
-                                onBack?.invoke()
                             }
                         ) {
                             Text("确定")

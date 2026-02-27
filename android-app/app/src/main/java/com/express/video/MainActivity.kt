@@ -85,7 +85,8 @@ class MainActivity : ComponentActivity() {
                                 onServerConfigScanned = { address, port ->
                                     showServerConfigScan = false
                                     viewModel.updateServerConfig(address, port)
-                                    Toast.makeText(context, "服务器配置成功: $address:$port", Toast.LENGTH_LONG).show()
+                                    viewModel.showSettings(true)
+                                    Toast.makeText(context, "服务器配置成功：$address:$port", Toast.LENGTH_LONG).show()
                                 },
                                 onBack = { showServerConfigScan = false }
                             )
