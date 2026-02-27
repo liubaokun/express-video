@@ -218,15 +218,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 is UploadResult.Success -> {
                     viewModelScope.launch {
-                        // 先显示 100% 进度
-                        _uiState.update {
-                            it.copy(
-                                uploadProgress = 100,
-                                uploadStatus = "上传完成"
-                            )
-                        }
-                        // 短暂延迟后显示成功
-                        delay(300)
                         videoRepository.deleteLocalFile(file)
                         val newCount = _uiState.value.recordingCount + 1
                         _uiState.update {
@@ -293,16 +284,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updateServerConfig(address: String, port: Int) {
-        // 立即更新 UI 状态
+fun updateServerConfig(address: String, port: Int) {
+        // 独即更新 UI 状态，同时切换到网络上传模式
         _uiState.update { current ->
             current.copy(
                 config = current.config.copy(
                     serverAddress = address,
-                    serverPort = port
+                    serverPort = port,
+                    saveMode = SaveMode.NETWORK
                 )
             )
         }
+        
+        // 异步持久化
+        viewModelScope.launch {
+            settingsRepository.updateServerConfig(address, port)
+            settingsRepository.updateSaveMode(SaveMode.NETWORK)
+        }
+    }
         
         // 异步持久化
         viewModelScope.launch {

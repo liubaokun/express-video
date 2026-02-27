@@ -198,7 +198,7 @@ fun SaveConfirmDialog(
         onDismissRequest = { },
         title = {
             Text(
-                text = "Recording Complete",
+                text = "录制完成",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -206,7 +206,7 @@ fun SaveConfirmDialog(
         text = {
             Column {
                 Text(
-                    text = "Video saved successfully",
+                    text = "视频录制成功",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -215,7 +215,7 @@ fun SaveConfirmDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "File:",
+                        text = "文件名：",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -231,7 +231,7 @@ fun SaveConfirmDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Size:",
+                        text = "大小：",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -245,7 +245,7 @@ fun SaveConfirmDialog(
         },
         confirmButton = {
             Button(onClick = onSave) {
-                Text("Save")
+                Text("保存")
             }
         }
     )
@@ -259,7 +259,7 @@ fun SaveSuccessDialog(
         onDismissRequest = { },
         title = {
             Text(
-                text = "Save Success",
+                text = "保存成功",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 color = MaterialTheme.colorScheme.primary
@@ -268,7 +268,7 @@ fun SaveSuccessDialog(
         text = {
             Column {
                 Text(
-                    text = "Video saved successfully",
+                    text = "视频已成功保存",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -279,7 +279,7 @@ fun SaveSuccessDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Auto close in 2 seconds...",
+                    text = "2秒后自动关闭...",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
